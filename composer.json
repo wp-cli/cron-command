@@ -16,7 +16,7 @@
     ],
     "minimum-stability": "dev",
     "autoload": {
-        "psr-4": {"\\": "src/"},
+        "psr-4": {"": "src/"},
         "files": [ "cron-command.php" ]
     },
     "require": {},
