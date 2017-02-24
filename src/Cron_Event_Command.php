@@ -468,5 +468,3 @@ class Cron_Event_Command extends WP_CLI_Command {
 	}
 
 }
-
-WP_CLI::add_command( 'cron event', 'Cron_Event_Command' );

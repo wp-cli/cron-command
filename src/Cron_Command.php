@@ -89,5 +89,3 @@ class Cron_Command extends WP_CLI_Command {
 	}
 
 }
-
-WP_CLI::add_command( 'cron', 'Cron_Command' );

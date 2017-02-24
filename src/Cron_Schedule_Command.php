@@ -126,5 +126,3 @@ class Cron_Schedule_Command extends WP_CLI_Command {
 	}
 
 }
-
-WP_CLI::add_command( 'cron schedule', 'Cron_Schedule_Command' );
