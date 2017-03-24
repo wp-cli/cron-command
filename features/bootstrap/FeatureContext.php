@@ -19,7 +19,7 @@ if ( file_exists( __DIR__ . '/utils.php' ) ) {
 		if ( ! empty( $composer->autoload->files ) ) {
 			$contents = 'require:' . PHP_EOL;
 			foreach( $composer->autoload->files as $file ) {
-				$contents .= '  - ' . dirname( dirname( dirname( __FILE__ ) ) ) . '/' . $file;
+				$contents .= '  - ' . dirname( dirname( dirname( __FILE__ ) ) ) . '/' . $file . PHP_EOL;
 			}
 			@mkdir( sys_get_temp_dir() . '/wp-cli-package-test/' );
 			$project_config = sys_get_temp_dir() . '/wp-cli-package-test/config.yml';
@@ -318,7 +318,8 @@ class FeatureContext extends BehatContext implements ClosuredContextInterface {
 
 	public function create_config( $subdir = '' ) {
 		$params = self::$db_settings;
-		$params['dbprefix'] = $subdir ?: 'wp_';
+		// Replaces all characters that are not alphanumeric or an underscore into an underscore.
+		$params['dbprefix'] = $subdir ? preg_replace( '#[^a-zA-Z\_0-9]#', '_', $subdir ) : 'wp_';
 
 		$params['skip-salts'] = true;
 		$this->proc( 'wp core config', $params, $subdir )->run_check();
