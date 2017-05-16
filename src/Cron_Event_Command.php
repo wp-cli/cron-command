@@ -227,7 +227,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		$hooks = wp_list_pluck( $events, 'hook' );
 		foreach( $args as $hook ) {
-			if ( ! in_array( $hook, $hooks ) ) {
+			if ( ! in_array( $hook, $hooks, true ) ) {
 				WP_CLI::error( sprintf( "Invalid cron event '%s'", $hook ) );
 			}
 		}
@@ -235,7 +235,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		if ( \WP_CLI\Utils\get_flag_value( $assoc_args, 'due-now' ) ) {
 			$due_events = array();
 			foreach( $events as $event ) {
-				if ( ! empty( $args ) && ! in_array( $event->hook, $args ) ) {
+				if ( ! empty( $args ) && ! in_array( $event->hook, $args, true ) ) {
 					continue;
 				}
 				if ( time() >= $event->time ) {
