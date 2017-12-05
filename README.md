@@ -13,7 +13,7 @@ This package implements the following commands:
 
 ### wp cron test
 
-Tests the WP Cron spawning system and report back its status.
+Tests the WP Cron spawning system and reports back its status.
 
 ~~~
 wp cron test 
