@@ -12,7 +12,7 @@
 class Cron_Command extends WP_CLI_Command {
 
 	/**
-	 * Test the WP Cron spawning system and report back its status.
+	 * Tests the WP Cron spawning system and report back its status.
 	 *
 	 * This command tests the spawning system by performing the following steps:
 	 *
@@ -56,7 +56,7 @@ class Cron_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Spawn a request to `wp-cron.php` and return the response.
+	 * Spawns a request to `wp-cron.php` and return the response.
 	 *
 	 * This function is designed to mimic the functionality in `spawn_cron()`
 	 * with the addition of returning the result of the `wp_remote_post()`
