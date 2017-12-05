@@ -13,7 +13,7 @@ This package implements the following commands:
 
 ### wp cron test
 
-Test the WP Cron spawning system and report back its status.
+Tests the WP Cron spawning system and reports back its status.
 
 ~~~
 wp cron test 
@@ -35,9 +35,39 @@ returned.
 
 
 
+### wp cron event
+
+Schedules, runs, and deletes WP-Cron events.
+
+~~~
+wp cron event
+~~~
+
+**EXAMPLES**
+
+    # Schedule a new cron event
+    $ wp cron event schedule cron_test
+    Success: Scheduled event with hook 'cron_test' for 2016-05-31 10:19:16 GMT.
+
+    # Run all cron events due right now
+    $ wp cron event run --due-now
+    Success: Executed a total of 2 cron events.
+
+    # Delete the next scheduled cron event
+    $ wp cron event delete cron_test
+    Success: Deleted 2 instances of the cron event 'cron_test'.
+
+    # List scheduled cron events in JSON
+    $ wp cron event list --fields=hook,next_run --format=json
+    [{"hook":"wp_version_check","next_run":"2016-05-31 10:15:13"},{"hook":"wp_update_plugins","next_run":"2016-05-31 10:15:13"},{"hook":"wp_update_themes","next_run":"2016-05-31 10:15:14"}]
+
+
+
+
+
 ### wp cron event delete
 
-Delete the next scheduled cron event for the given hook.
+Deletes the next scheduled cron event for the given hook.
 
 ~~~
 wp cron event delete <hook>
@@ -58,7 +88,7 @@ wp cron event delete <hook>
 
 ### wp cron event list
 
-List scheduled cron events.
+Lists scheduled cron events.
 
 ~~~
 wp cron event list [--fields=<fields>] [--<field>=<value>] [--field=<field>] [--format=<format>]
@@ -124,7 +154,7 @@ These fields are optionally available:
 
 ### wp cron event run
 
-Run the next scheduled cron event for the given hook.
+Runs the next scheduled cron event for the given hook.
 
 ~~~
 wp cron event run [<hook>...] [--due-now] [--all]
@@ -151,7 +181,7 @@ wp cron event run [<hook>...] [--due-now] [--all]
 
 ### wp cron event schedule
 
-Schedule a new cron event.
+Schedules a new cron event.
 
 ~~~
 wp cron event schedule <hook> [<next-run>] [<recurrence>] [--<field>=<value>]
@@ -184,6 +214,30 @@ wp cron event schedule <hook> [<next-run>] [<recurrence>] [--<field>=<value>]
     # Schedule new cron event and pass associative arguments
     $ wp cron event schedule cron_test '+1 hour' --foo=1 --bar=2
     Success: Scheduled event with hook 'cron_test' for 2016-05-31 11:21:35 GMT.
+
+
+
+### wp cron schedule
+
+Gets WP-Cron schedules.
+
+~~~
+wp cron schedule
+~~~
+
+**EXAMPLES**
+
+    # List available cron schedules
+    $ wp cron schedule list
+    +------------+-------------+----------+
+    | name       | display     | interval |
+    +------------+-------------+----------+
+    | hourly     | Once Hourly | 3600     |
+    | twicedaily | Twice Daily | 43200    |
+    | daily      | Once Daily  | 86400    |
+    +------------+-------------+----------+
+
+
 
 
 
@@ -273,7 +327,7 @@ Once you've decided to commit the time to seeing your pull request through, [ple
 
 ## Support
 
-Github issues aren't for general support questions, but there are other venues you can try: http://wp-cli.org/#support
+Github issues aren't for general support questions, but there are other venues you can try: https://wp-cli.org/#support
 
 
 *This README.md is generated dynamically from the project's codebase using `wp scaffold package-readme` ([doc](https://github.com/wp-cli/scaffold-package-command#wp-scaffold-package-readme)). To suggest changes, please submit a pull request against the corresponding part of the codebase.*
