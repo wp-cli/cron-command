@@ -32,10 +32,12 @@
         "bundled": true,
         "commands": [
             "cron test",
+            "cron event",
             "cron event delete",
             "cron event list",
             "cron event run",
             "cron event schedule",
+            "cron schedule",
             "cron schedule list"
         ]
     }
