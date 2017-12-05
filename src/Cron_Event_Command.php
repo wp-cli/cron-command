@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Manage WP-Cron events.
+ * Schedules, runs, and deletes WP-Cron events.
  *
  * ## EXAMPLES
  *
@@ -34,7 +34,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	private static $time_format = 'Y-m-d H:i:s';
 
 	/**
-	 * List scheduled cron events.
+	 * Lists scheduled cron events.
 	 *
 	 * ## OPTIONS
 	 *
@@ -121,7 +121,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Schedule a new cron event.
+	 * Schedules a new cron event.
 	 *
 	 * ## OPTIONS
 	 *
@@ -194,7 +194,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Run the next scheduled cron event for the given hook.
+	 * Runs the next scheduled cron event for the given hook.
 	 *
 	 * ## OPTIONS
 	 *
@@ -292,7 +292,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Delete the next scheduled cron event for the given hook.
+	 * Deletes the next scheduled cron event for the given hook.
 	 *
 	 * ## OPTIONS
 	 *
@@ -369,7 +369,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Fetch an array of scheduled cron events.
+	 * Fetches an array of scheduled cron events.
 	 *
 	 * @return array|WP_Error An array of event objects, or a WP_Error object if there are no events scheduled.
 	 */
@@ -409,7 +409,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Convert a time interval into human-readable format.
+	 * Converts a time interval into human-readable format.
 	 *
 	 * Similar to WordPress' built-in `human_time_diff()` but returns two time period chunks instead of just one.
 	 *
