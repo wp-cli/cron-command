@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Manage WP-Cron schedules.
+ * Gets WP-Cron schedules.
  *
  * ## EXAMPLES
  *
