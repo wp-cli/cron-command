@@ -1,7 +1,7 @@
 wp-cli/cron-command
 ===================
 
-Manage WP-Cron events and schedules.
+Tests, runs, and deletes WP-Cron events; manages WP-Cron schedules.
 
 [![Build Status](https://travis-ci.org/wp-cli/cron-command.svg?branch=master)](https://travis-ci.org/wp-cli/cron-command)
 
@@ -13,7 +13,7 @@ This package implements the following commands:
 
 ### wp cron
 
-Tests, runs, and deletes WP-Cron events and manages WP-Cron schedules.
+Tests, runs, and deletes WP-Cron events; manages WP-Cron schedules.
 
 ~~~
 wp cron
