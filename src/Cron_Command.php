@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Tests, runs, and deletes WP-Cron events and manages WP-Cron schedules.
+ * Tests, runs, and deletes WP-Cron events; manages WP-Cron schedules.
  *
  * ## EXAMPLES
  *

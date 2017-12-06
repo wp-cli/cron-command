@@ -1,6 +1,6 @@
 # Used by Probot Settings: https://probot.github.io/apps/settings/
 repository:
-  description: Manage WP-Cron events and schedules.
+  description: Tests, runs, and deletes WP-Cron events; manages WP-Cron schedules.
 labels:
   - name: bug
     color: fc2929
