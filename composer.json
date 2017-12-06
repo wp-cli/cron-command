@@ -31,6 +31,7 @@
         },
         "bundled": true,
         "commands": [
+            "cron",
             "cron test",
             "cron event",
             "cron event delete",
