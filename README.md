@@ -11,6 +11,22 @@ Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contr
 
 This package implements the following commands:
 
+### wp cron
+
+Tests, runs, and deletes WP-Cron events and manages WP-Cron schedules.
+
+~~~
+wp cron
+~~~
+
+**EXAMPLES**
+
+    # Test WP Cron spawning system
+    $ wp cron test
+    Success: WP-Cron spawning is working as expected.
+
+
+
 ### wp cron test
 
 Tests the WP Cron spawning system and reports back its status.
