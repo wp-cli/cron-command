@@ -190,9 +190,9 @@ Feature: Manage WP-Cron events and schedules
 
   Scenario: Testing WP-Cron
     When I try `wp cron test`
-    Then STDERR should not contain:
+    Then STDERR should be:
       """
-      Error:
+      Error: The DISABLE_WP_CRON constant is set to true. WP-Cron spawning is disabled.
       """
 
   Scenario: Run multiple cron events
