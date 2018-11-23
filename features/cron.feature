@@ -2,6 +2,7 @@ Feature: Manage WP-Cron events and schedules
 
   Background:
     Given a WP install
+    And I run `wp config set DISABLE_WP_CRON false --raw --type=constant --anchor='// ** MySQL settings ** //'`
 
   Scenario: Scheduling and then deleting an event
     When I run `wp cron event schedule wp_cli_test_event_1 '+1 hour 5 minutes' --apple=banana`
@@ -190,9 +191,9 @@ Feature: Manage WP-Cron events and schedules
 
   Scenario: Testing WP-Cron
     When I try `wp cron test`
-    Then STDERR should be:
+    Then STDERR should not contain:
       """
-      Error: The DISABLE_WP_CRON constant is set to true. WP-Cron spawning is disabled.
+      Error:
       """
 
   Scenario: Run multiple cron events
