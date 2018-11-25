@@ -159,8 +159,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::warning( 'Numeric keys should be used for the hook arguments.' );
 		}
 
-		$hook       = $args[0];
-		$next_run   = Utils\get_flag_value( $args, 1, 'now' );
+
 		$recurrence = Utils\get_flag_value( $args, 2, false );
 
 		if ( empty( $next_run ) ) {
@@ -261,15 +260,23 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		$executed = 0;
 		foreach ( $events as $event ) {
-			$start  = microtime( true );
-			$result = self::run_event( $event );
-			$total  = round( microtime( true ) - $start, 3 );
-			$executed++;
-			WP_CLI::log( sprintf( "Executed the cron event '%s' in %ss.", $event->hook, $total ) );
+			$start   = microtime( true );
+			$success = self::run_event( $event );
+			$total   = round( microtime( true ) - $start, 3 );
+			if ( $success ) {
+				$executed++;
+				WP_CLI::log( sprintf( "Executed the cron event '%s' in %ss.", $event->hook, $total ) );
+			}
 		}
 
-		$message = ( 1 === $executed ) ? 'Executed a total of %d cron event.' : 'Executed a total of %d cron events.';
-		WP_CLI::success( sprintf( $message, $executed ) );
+		WP_CLI::success(
+			sprintf(
+				'Executed %d out of %d %s.',
+				$executed,
+				count( $events ),
+				Utils\pluralize( 'cron event', count( $events ) )
+			)
+		);
 	}
 
 	/**
@@ -326,10 +333,26 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * @return bool Whether the event was successfully executed or not.
 	 */
 	protected static function run_event( stdClass $event ) {
-
 		if ( ! defined( 'DOING_CRON' ) ) {
 			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Using native WordPress constant.
 			define( 'DOING_CRON', true );
+		}
+
+		$gmt_time = microtime( true );
+
+		$doing_wp_cron = static::get_cron_lock();
+
+		if ( $doing_wp_cron
+			&& ( $doing_wp_cron + WP_CRON_LOCK_TIMEOUT > $gmt_time ) ) {
+			WP_CLI::warning( "Active cron lock found, skipping execution of {$event->hook}." );
+			return false;
+		}
+
+		$doing_wp_cron = sprintf( '%.22F', microtime( true ) );
+
+		$success = set_transient( 'doing_cron', $doing_wp_cron );
+		if ( ! $success ) {
+			WP_CLI::warning( 'Could not persist new cron lock.' );
 		}
 
 		if ( false !== $event->schedule ) {
@@ -342,8 +365,11 @@ class Cron_Event_Command extends WP_CLI_Command {
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Can't prefix dynamic hooks here, calling registered hooks.
 		do_action_ref_array( $event->hook, $event->args );
 
-		return true;
+		if ( static::get_cron_lock() === $doing_wp_cron ) {
+			delete_transient( 'doing_cron' );
+		}
 
+		return true;
 	}
 
 	/**
@@ -528,4 +554,37 @@ class Cron_Event_Command extends WP_CLI_Command {
 		return new \WP_CLI\Formatter( $assoc_args, $this->fields, 'event' );
 	}
 
+	/**
+	 * Retrieves the cron lock.
+	 *
+	 * Returns the uncached `doing_cron` transient.
+	 *
+	 * Copied from WordPress Core `wp-cron.php` file.
+	 *
+	 * @global wpdb $wpdb WordPress database abstraction object.
+	 *
+	 * @return string|false Value of the `doing_cron` transient, 0|false otherwise.
+	 */
+	private static function get_cron_lock() {
+		global $wpdb;
+		$value = 0;
+		if ( wp_using_ext_object_cache() ) {
+			/*
+			 * Skip local cache and force re-fetch of doing_cron transient
+			 * in case another process updated the cache.
+			 */
+			$value = wp_cache_get( 'doing_cron', 'transient', true );
+		} else {
+			$row = $wpdb->get_row(
+				$wpdb->prepare(
+					"SELECT option_value FROM {$wpdb->options} WHERE option_name = %s LIMIT 1",
+					'_transient_doing_cron'
+				)
+			);
+			if ( is_object( $row ) ) {
+				$value = $row->option_value;
+			}
+		}
+		return $value;
+	}
 }
