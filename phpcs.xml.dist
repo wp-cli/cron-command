@@ -10,10 +10,10 @@
 	#############################################################################
 	-->
 
-	<!-- What to scan -->
+	<!-- What to scan. -->
 	<file>.</file>
 
-	<!-- Ignoring select files/folders
+	<!-- Ignoring select files/folders.
 		 https://github.com/squizlabs/PHP_CodeSniffer/wiki/Advanced-Usage#ignoring-files-and-folders -->
 	<exclude-pattern>*/node_modules/*</exclude-pattern>
 	<exclude-pattern>*/vendor/*</exclude-pattern>
@@ -65,8 +65,7 @@
 
 	<!-- Exclude existing classes from the prefix rule as it would break BC to prefix them now. -->
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedClassFound">
-		<exclude-pattern>*/src/Cron_Command\.php$</exclude-pattern>
-		<exclude-pattern>*/src/Cron_(Event|Schedule)_Command\.php$</exclude-pattern>
+		<exclude-pattern>*/src/(Cron|Cron_Event|Cron_Schedule)_Command\.php$</exclude-pattern>
 	</rule>
 
 </ruleset>
