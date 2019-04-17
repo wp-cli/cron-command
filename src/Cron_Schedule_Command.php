@@ -79,7 +79,7 @@ class Cron_Schedule_Command extends WP_CLI_Command {
 
 		$schedules = self::get_schedules();
 
-		if ( 'ids' == $formatter->format ) {
+		if ( 'ids' === $formatter->format ) {
 			echo implode( ' ', wp_list_pluck( $schedules, 'name' ) );
 		} else {
 			$formatter->display_items( $schedules );
@@ -106,7 +106,7 @@ class Cron_Schedule_Command extends WP_CLI_Command {
 	*/
 	protected static function get_schedules() {
 		$schedules = wp_get_schedules();
-		if ( !empty( $schedules ) ) {
+		if ( ! empty( $schedules ) ) {
 			uasort( $schedules, 'Cron_Schedule_Command::sort' );
 			$schedules = array_map( 'Cron_Schedule_Command::format_schedule', $schedules, array_keys( $schedules ) );
 		}
