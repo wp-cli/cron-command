@@ -157,8 +157,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 	public function schedule( $args, $assoc_args ) {
 
 		$hook       = $args[0];
-		$next_run   = \WP_CLI\Utils\get_flag_value( $args, 1, 'now' );
-		$recurrence = \WP_CLI\Utils\get_flag_value( $args, 2, false );
+		$next_run   = Utils\get_flag_value( $args, 1, 'now' );
+		$recurrence = Utils\get_flag_value( $args, 2, false );
 
 		if ( empty( $next_run ) ) {
 			$timestamp = time();
@@ -218,7 +218,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 */
 	public function run( $args, $assoc_args ) {
 
-		if ( empty( $args ) && ! \WP_CLI\Utils\get_flag_value( $assoc_args, 'due-now' ) && ! \WP_CLI\Utils\get_flag_value( $assoc_args, 'all' ) ) {
+		if ( empty( $args ) && ! Utils\get_flag_value( $assoc_args, 'due-now' ) && ! Utils\get_flag_value( $assoc_args, 'all' ) ) {
 			WP_CLI::error( 'Please specify one or more cron events, or use --due-now/--all.' );
 		}
 
@@ -235,7 +235,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			}
 		}
 
-		if ( \WP_CLI\Utils\get_flag_value( $assoc_args, 'due-now' ) ) {
+		if ( Utils\get_flag_value( $assoc_args, 'due-now' ) ) {
 			$due_events = array();
 			foreach ( $events as $event ) {
 				if ( ! empty( $args ) && ! in_array( $event->hook, $args, true ) ) {
@@ -246,7 +246,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 				}
 			}
 			$events = $due_events;
-		} elseif ( ! \WP_CLI\Utils\get_flag_value( $assoc_args, 'all' ) ) {
+		} elseif ( ! Utils\get_flag_value( $assoc_args, 'all' ) ) {
 			$due_events = array();
 			foreach ( $events as $event ) {
 				if ( in_array( $event->hook, $args, true ) ) {
@@ -278,7 +278,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	protected static function run_event( stdClass $event ) {
 
 		if ( ! defined( 'DOING_CRON' ) ) {
-			define( 'DOING_CRON', true ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound
+			define( 'DOING_CRON', true ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Using native WordPress constant.
 		}
 
 		if ( false !== $event->schedule ) {
@@ -288,7 +288,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		wp_unschedule_event( $event->time, $event->hook, $event->args );
 
-		do_action_ref_array( $event->hook, $event->args ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
+		do_action_ref_array( $event->hook, $event->args ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Can't prefix dynamic hooks here, calling registered hooks.
 
 		return true;
 
@@ -398,7 +398,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 						'sig'      => $sig,
 						'args'     => $data['args'],
 						'schedule' => $data['schedule'],
-						'interval' => \WP_CLI\Utils\get_flag_value( $data, 'interval' ),
+						'interval' => Utils\get_flag_value( $data, 'interval' ),
 					);
 
 				}
