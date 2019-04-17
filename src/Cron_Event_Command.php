@@ -31,6 +31,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		'next_run_relative',
 		'recurrence',
 	);
+
 	private static $time_format = 'Y-m-d H:i:s';
 
 	/**
@@ -112,7 +113,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			}
 		}
 
-		if ( 'ids' == $formatter->format ) {
+		if ( 'ids' === $formatter->format ) {
 			echo implode( ' ', wp_list_pluck( $events, 'hook' ) );
 		} else {
 			$formatter->display_items( $events );
@@ -153,13 +154,13 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 */
 	public function schedule( $args, $assoc_args ) {
 
-		$hook = $args[0];
-		$next_run = \WP_CLI\Utils\get_flag_value( $args, 1, 'now' );
+		$hook       = $args[0];
+		$next_run   = \WP_CLI\Utils\get_flag_value( $args, 1, 'now' );
 		$recurrence = \WP_CLI\Utils\get_flag_value( $args, 2, false );
 
 		if ( empty( $next_run ) ) {
 			$timestamp = time();
-		} else if ( is_numeric( $next_run ) ) {
+		} elseif ( is_numeric( $next_run ) ) {
 			$timestamp = absint( $next_run );
 		} else {
 			$timestamp = strtotime( $next_run );
@@ -173,7 +174,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 			$schedules = wp_get_schedules();
 
-			if ( ! isset( $schedules[$recurrence] ) ) {
+			if ( ! isset( $schedules[ $recurrence ] ) ) {
 				WP_CLI::error( sprintf( "'%s' is not a valid schedule name for recurrence.", $recurrence ) );
 			}
 
@@ -226,7 +227,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		}
 
 		$hooks = wp_list_pluck( $events, 'hook' );
-		foreach( $args as $hook ) {
+		foreach ( $args as $hook ) {
 			if ( ! in_array( $hook, $hooks, true ) ) {
 				WP_CLI::error( sprintf( "Invalid cron event '%s'", $hook ) );
 			}
@@ -234,7 +235,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		if ( \WP_CLI\Utils\get_flag_value( $assoc_args, 'due-now' ) ) {
 			$due_events = array();
-			foreach( $events as $event ) {
+			foreach ( $events as $event ) {
 				if ( ! empty( $args ) && ! in_array( $event->hook, $args, true ) ) {
 					continue;
 				}
@@ -243,10 +244,10 @@ class Cron_Event_Command extends WP_CLI_Command {
 				}
 			}
 			$events = $due_events;
-		} else if ( ! \WP_CLI\Utils\get_flag_value( $assoc_args, 'all' ) ) {
+		} elseif ( ! \WP_CLI\Utils\get_flag_value( $assoc_args, 'all' ) ) {
 			$due_events = array();
-			foreach( $events as $event ) {
-				if ( in_array( $event->hook, $args ) ) {
+			foreach ( $events as $event ) {
+				if ( in_array( $event->hook, $args, true ) ) {
 					$due_events[] = $event;
 				}
 			}
@@ -255,9 +256,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		$executed = 0;
 		foreach ( $events as $event ) {
-			$start = microtime( true );
+			$start  = microtime( true );
 			$result = self::run_event( $event );
-			$total = round( microtime( true ) - $start, 3 );
+			$total  = round( microtime( true ) - $start, 3 );
 			$executed++;
 			WP_CLI::log( sprintf( "Executed the cron event '%s' in %ss.", $event->hook, $total ) );
 		}
@@ -275,17 +276,17 @@ class Cron_Event_Command extends WP_CLI_Command {
 	protected static function run_event( stdClass $event ) {
 
 		if ( ! defined( 'DOING_CRON' ) ) {
-			define( 'DOING_CRON', true );
+			define( 'DOING_CRON', true ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound
 		}
 
-		if ( $event->schedule != false ) {
+		if ( false !== $event->schedule ) {
 			$new_args = array( $event->time, $event->schedule, $event->hook, $event->args );
 			call_user_func_array( 'wp_reschedule_event', $new_args );
 		}
 
 		wp_unschedule_event( $event->time, $event->hook, $event->args );
 
-		do_action_ref_array( $event->hook, $event->args );
+		do_action_ref_array( $event->hook, $event->args ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
 
 		return true;
 
@@ -316,7 +317,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		$deleted = 0;
 		foreach ( $events as $event ) {
-			if ( $event->hook == $hook ) {
+			if ( $event->hook === $hook ) {
 				$result = self::delete_event( $event );
 				if ( $result ) {
 					$deleted++;
@@ -327,7 +328,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		}
 
 		if ( $deleted ) {
-			$message = ( 1 == $deleted ) ? "Deleted the cron event '%2\$s'." : "Deleted %1\$d instances of the cron event '%2\$s'.";
+			$message = ( 1 === $deleted ) ? "Deleted the cron event '%2\$s'." : "Deleted %1\$d instances of the cron event '%2\$s'.";
 			WP_CLI::success( sprintf( $message, $deleted, $hook ) );
 		} else {
 			WP_CLI::error( sprintf( "Invalid cron event '%s'.", $hook ) );
@@ -344,7 +345,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	protected static function delete_event( stdClass $event ) {
 		$crons = _get_cron_array();
 
-		if ( ! isset( $crons[$event->time][$event->hook][$event->sig] ) ) {
+		if ( ! isset( $crons[ $event->time ][ $event->hook ][ $event->sig ] ) ) {
 			return false;
 		}
 
@@ -425,13 +426,13 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		// array of time period chunks
 		$chunks = array(
-			array( 60 * 60 * 24 * 365 , \_n_noop( '%s year', '%s years' ) ),
-			array( 60 * 60 * 24 * 30 , \_n_noop( '%s month', '%s months' ) ),
+			array( 60 * 60 * 24 * 365, \_n_noop( '%s year', '%s years' ) ),
+			array( 60 * 60 * 24 * 30, \_n_noop( '%s month', '%s months' ) ),
 			array( 60 * 60 * 24 * 7, \_n_noop( '%s week', '%s weeks' ) ),
-			array( 60 * 60 * 24 , \_n_noop( '%s day', '%s days' ) ),
-			array( 60 * 60 , \_n_noop( '%s hour', '%s hours' ) ),
-			array( 60 , \_n_noop( '%s minute', '%s minutes' ) ),
-			array(  1 , \_n_noop( '%s second', '%s seconds' ) ),
+			array( 60 * 60 * 24, \_n_noop( '%s day', '%s days' ) ),
+			array( 60 * 60, \_n_noop( '%s hour', '%s hours' ) ),
+			array( 60, \_n_noop( '%s minute', '%s minutes' ) ),
+			array( 1, \_n_noop( '%s second', '%s seconds' ) ),
 		);
 
 		// we only want to output two chunks of time here, eg:
@@ -441,11 +442,12 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		// step one: the first chunk
 		for ( $i = 0, $j = count( $chunks ); $i < $j; $i++ ) {
-			$seconds = $chunks[$i][0];
-			$name = $chunks[$i][1];
+			$seconds = $chunks[ $i ][0];
+			$name    = $chunks[ $i ][1];
 
 			// finding the biggest chunk (if the chunk fits, break)
-			if ( ( $count = floor( $since / $seconds ) ) != 0 ){
+			$count = floor( $since / $seconds );
+			if ( floatval( 0 ) !== $count ) {
 				break;
 			}
 		}
@@ -455,10 +457,11 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		// step two: the second chunk
 		if ( $i + 1 < $j ) {
-			$seconds2 = $chunks[$i + 1][0];
-			$name2    = $chunks[$i + 1][1];
+			$seconds2 = $chunks[ $i + 1 ][0];
+			$name2    = $chunks[ $i + 1 ][1];
 
-			if ( ( $count2 = floor( ( $since - ( $seconds * $count ) ) / $seconds2 ) ) != 0 ) {
+			$count2 = floor( ( $since - ( $seconds * $count ) ) / $seconds2 );
+			if ( floatval( 0 ) !== $count2 ) {
 				// add to output var
 				$output .= ' ' . sprintf( \_n( $name2[0], $name2[1], $count2 ), $count2 );
 			}
