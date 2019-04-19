@@ -278,7 +278,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 	protected static function run_event( stdClass $event ) {
 
 		if ( ! defined( 'DOING_CRON' ) ) {
-			define( 'DOING_CRON', true ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Using native WordPress constant.
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Using native WordPress constant.
+			define( 'DOING_CRON', true );
 		}
 
 		if ( false !== $event->schedule ) {
@@ -288,7 +289,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		wp_unschedule_event( $event->time, $event->hook, $event->args );
 
-		do_action_ref_array( $event->hook, $event->args ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Can't prefix dynamic hooks here, calling registered hooks.
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Can't prefix dynamic hooks here, calling registered hooks.
+		do_action_ref_array( $event->hook, $event->args );
 
 		return true;
 

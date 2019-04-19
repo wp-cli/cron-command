@@ -75,7 +75,8 @@ class Cron_Command extends WP_CLI_Command {
 			'args' => array(
 				'timeout'   => 3,
 				'blocking'  => true,
-				'sslverify' => apply_filters( 'https_local_ssl_verify', $sslverify ), // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Calling native WordPress hook.
+				// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Calling native WordPress hook.
+				'sslverify' => apply_filters( 'https_local_ssl_verify', $sslverify ),
 			),
 		);
 
