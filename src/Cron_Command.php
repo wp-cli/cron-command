@@ -78,10 +78,9 @@ class Cron_Command extends WP_CLI_Command {
 				'sslverify' => apply_filters( 'https_local_ssl_verify', $sslverify ), // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Calling native WordPress hook.
 			),
 		);
-		$cron_request       = apply_filters(
-			'cron_request', // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- 		'cron_request', // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Calling native WordPress hook.
-			$cron_request_array
-		);
+
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Calling native WordPress hook.
+		$cron_request = apply_filters( 'cron_request', $cron_request_array );
 
 		# Enforce a blocking request in case something that's hooked onto the 'cron_request' filter sets it to false
 		$cron_request['args']['blocking'] = true;
