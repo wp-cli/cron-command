@@ -69,15 +69,19 @@ class Cron_Command extends WP_CLI_Command {
 		$sslverify     = \WP_CLI\Utils\wp_version_compare( 4.0, '<' );
 		$doing_wp_cron = sprintf( '%.22F', microtime( true ) );
 
-		$cron_request = apply_filters( 'cron_request', array(
+		$cron_request_array = array(
 			'url'  => site_url( 'wp-cron.php?doing_wp_cron=' . $doing_wp_cron ),
 			'key'  => $doing_wp_cron,
 			'args' => array(
 				'timeout'   => 3,
 				'blocking'  => true,
-				'sslverify' => apply_filters( 'https_local_ssl_verify', $sslverify )
-			)
-		) );
+				// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Calling native WordPress hook.
+				'sslverify' => apply_filters( 'https_local_ssl_verify', $sslverify ),
+			),
+		);
+
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Calling native WordPress hook.
+		$cron_request = apply_filters( 'cron_request', $cron_request_array );
 
 		# Enforce a blocking request in case something that's hooked onto the 'cron_request' filter sets it to false
 		$cron_request['args']['blocking'] = true;
