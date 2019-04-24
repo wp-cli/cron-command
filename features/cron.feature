@@ -2,8 +2,7 @@ Feature: Manage WP-Cron events and schedules
 
   Background:
     Given a WP install
-    And I run `wp config set DISABLE_WP_CRON false --raw --type=constant --anchor='// ** MySQL settings - You can get this info from your web host ** //
-'`
+    And I run `wp config set DISABLE_WP_CRON false --raw --type=constant --anchor='// ** MySQL settings - You can get this info from your web host ** //'`
 
   Scenario: Scheduling and then deleting an event
     When I run `wp cron event schedule wp_cli_test_event_1 '+1 hour 5 minutes' --apple=banana`
