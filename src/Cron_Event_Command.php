@@ -189,7 +189,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		}
 
 		if ( false !== $event ) {
-			WP_CLI::success( sprintf( "Scheduled event with hook '%s' for %s GMT.", $hook, date( self::$time_format, $timestamp ) ) );
+			WP_CLI::success( sprintf( "Scheduled event with hook '%s' for %s GMT.", $hook, date( self::$time_format, $timestamp ) ) ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 		} else {
 			WP_CLI::error( 'Event not scheduled.' );
 		}
@@ -365,8 +365,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 */
 	protected static function format_event( stdClass $event ) {
 
-		$event->next_run          = get_date_from_gmt( date( 'Y-m-d H:i:s', $event->time ), self::$time_format );
-		$event->next_run_gmt      = date( self::$time_format, $event->time );
+		$event->next_run          = get_date_from_gmt( date( 'Y-m-d H:i:s', $event->time ), self::$time_format ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
+		$event->next_run_gmt      = date( self::$time_format, $event->time ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 		$event->next_run_relative = self::interval( $event->time - time() );
 		$event->recurrence        = ( $event->schedule ) ? self::interval( $event->interval ) : 'Non-repeating';
 
