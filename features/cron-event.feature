@@ -38,8 +38,14 @@ Feature: Manage WP Cron events
       Executed a total of 1 cron event
       """
 
-    When I run `wp cron event unschedule wp_cli_test_event`
+    When I run `wp cron event unschedule wp_cli_test_event_1`
     Then STDOUT should contain:
       """
-      Success: Unscheduled event with hook 'wp_cli_test_event'
+      Success: Unscheduled event with hook 'wp_cli_test_event_1'
+      """
+
+    When I try `wp cron event unschedule wp_cli_test_event`
+    Then STDERR should be:
+      """
+      Error: No event found with hook 'wp_cli_test_event'.
       """
