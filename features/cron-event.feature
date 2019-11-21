@@ -54,9 +54,9 @@ Feature: Manage WP Cron events
       """
 
   @less-than-wp-4.9.0
-  Scenario: Unschedule cron event for WP < 4.9.0 has no effect so should give warning
+  Scenario: Unschedule cron event for WP < 4.9.0, wp_unschedule_hook was not included
     When I try `wp cron event unschedule wp_cli_test_event_1`
-    Then STDOUT should contain:
+    Then STDERR should be:
       """
       Error: The 'wp_unschedule_hook' function was only introduced in WordPress 4.9.0.
       """
