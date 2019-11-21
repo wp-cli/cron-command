@@ -289,11 +289,19 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		$unscheduled = wp_unschedule_hook( $hook );
 
-		if ( false !== $unscheduled ) {
-			$message = ( 1 === $unscheduled || 0 === $unscheduled ) ? "Unscheduled event with hook '%2\$s'." : "Unscheduled %1\$d events with hook '%2\$s'.";
-			WP_CLI::success( sprintf( $message, $unscheduled, $hook ) );
+		if ( empty( $unscheduled ) ) {
+			$message = 'Event not unscheduled.';
+
+			// If 0 event found on hook.
+			if ( 0 === $unscheduled ) {
+				$message = "No event found with hook '%1\$s'.";
+			}
+
+			WP_CLI::error( sprintf( $message, $hook ) );
+
 		} else {
-			WP_CLI::error( 'Event not unscheduled.' );
+			$message = ( 1 === $unscheduled ) ? "Unscheduled event with hook '%2\$s'." : "Unscheduled %1\$d events with hook '%2\$s'.";
+			WP_CLI::success( sprintf( $message, $unscheduled, $hook ) );
 		}
 
 	}
