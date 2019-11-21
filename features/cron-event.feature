@@ -37,3 +37,9 @@ Feature: Manage WP Cron events
       """
       Executed a total of 1 cron event
       """
+
+    When I run `wp cron event unschedule wp_cli_test_event`
+    Then STDOUT should contain:
+      """
+      Success: Unscheduled event with hook 'wp_cli_test_event'
+      """

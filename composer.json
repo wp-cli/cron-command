@@ -36,7 +36,8 @@
             "cron event run",
             "cron event schedule",
             "cron schedule",
-            "cron schedule list"
+            "cron schedule list",
+            "cron event unschedule"
         ]
     },
     "autoload": {

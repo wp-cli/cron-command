@@ -270,6 +270,35 @@ class Cron_Event_Command extends WP_CLI_Command {
 	}
 
 	/**
+	 * Unchedules cron event on specific hook.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <hook>
+	 * : The hook name.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Unschedule a cron event on given hook.
+	 *     $ wp cron event unschedule cron_test
+	 *     Success: Unscheduled 2 events with hook 'cron_test'.
+	 */
+	public function unschedule( $args, $assoc_args ) {
+
+		$hook = $args[0];
+
+		$unscheduled = wp_unschedule_hook( $hook );
+
+		if ( false !== $unscheduled ) {
+			$message = ( 1 === $unscheduled || 0 === $unscheduled ) ? "Unscheduled event with hook '%2\$s'." : "Unscheduled %1\$d events with hook '%2\$s'.";
+			WP_CLI::success( sprintf( $message, $unscheduled, $hook ) );
+		} else {
+			WP_CLI::error( 'Event not unscheduled.' );
+		}
+
+	}
+
+	/**
 	 * Executes an event immediately.
 	 *
 	 * @param stdClass $event The event
