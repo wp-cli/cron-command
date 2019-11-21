@@ -233,27 +233,6 @@ wp cron event schedule <hook> [<next-run>] [<recurrence>] [--<field>=<value>]
 
 
 
-### wp cron event unschedule
-
-Unchedules cron event on specific hook.
-
-~~~
-wp cron event unschedule <hook>
-~~~
-
-**OPTIONS**
-
-	<hook>
-		The hook name.
-
-**EXAMPLES**
-
-    # Unschedule a cron event on given hook.
-    $ wp cron event unschedule cron_test
-    Success: Unscheduled 2 events with hook 'cron_test'.
-
-
-
 ### wp cron schedule
 
 Gets WP-Cron schedules.
@@ -331,6 +310,27 @@ There are no additional fields.
     # List id of available cron schedule
     $ wp cron schedule list --fields=name --format=ids
     hourly twicedaily daily
+
+
+
+### wp cron event unschedule
+
+Unchedules cron event on specific hook.
+
+~~~
+wp cron event unschedule <hook>
+~~~
+
+**OPTIONS**
+
+	<hook>
+		The hook name.
+
+**EXAMPLES**
+
+    # Unschedule a cron event on given hook.
+    $ wp cron event unschedule cron_test
+    Success: Unscheduled 2 events with hook 'cron_test'.
 
 ## Installing
 
