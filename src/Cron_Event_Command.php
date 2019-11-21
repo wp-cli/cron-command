@@ -287,6 +287,10 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		$hook = $args[0];
 
+		if ( Utils\wp_version_compare( '4.9.0', '<' ) ) {
+			WP_CLI::error( "The 'wp_unschedule_hook' function was only introduced in WordPress 4.9.0." );
+		}
+
 		$unscheduled = wp_unschedule_hook( $hook );
 
 		if ( empty( $unscheduled ) ) {

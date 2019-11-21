@@ -38,7 +38,10 @@ Feature: Manage WP Cron events
       Executed a total of 1 cron event
       """
 
-    When I run `wp cron event unschedule wp_cli_test_event_1`
+  @require-wp-4.9.0
+  Scenario: Unschedule cron event
+    When I run `wp cron event schedule wp_cli_test_event_1 now hourly`
+    And I try `wp cron event unschedule wp_cli_test_event_1`
     Then STDOUT should contain:
       """
       Success: Unscheduled event with hook 'wp_cli_test_event_1'
@@ -48,4 +51,12 @@ Feature: Manage WP Cron events
     Then STDERR should be:
       """
       Error: No event found with hook 'wp_cli_test_event'.
+      """
+
+  @less-than-wp-4.9.0
+  Scenario: Unschedule cron event for WP < 4.9.0 has no effect so should give warning
+    When I try `wp cron event unschedule wp_cli_test_event_1`
+    Then STDOUT should contain:
+      """
+      Error: The 'wp_unschedule_hook' function was only introduced in WordPress 4.9.0.
       """
