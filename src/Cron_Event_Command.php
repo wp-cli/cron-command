@@ -304,8 +304,14 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::error( sprintf( $message, $hook ) );
 
 		} else {
-			$message = ( 1 === $unscheduled ) ? "Unscheduled event with hook '%2\$s'." : "Unscheduled %1\$d events with hook '%2\$s'.";
-			WP_CLI::success( sprintf( $message, $unscheduled, $hook ) );
+			WP_CLI::success(
+				sprintf(
+					'Unscheduled %1$d %2$s with hook \'%3$s\'.',
+					$unscheduled,
+					_n( 'event', 'events', $unscheduled ),
+					$hook
+				)
+			);
 		}
 
 	}

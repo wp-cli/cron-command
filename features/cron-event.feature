@@ -44,7 +44,19 @@ Feature: Manage WP Cron events
     And I try `wp cron event unschedule wp_cli_test_event_1`
     Then STDOUT should contain:
       """
-      Success: Unscheduled event with hook 'wp_cli_test_event_1'
+      Success: Unscheduled 1 event with hook 'wp_cli_test_event_1'.
+      """
+
+    When I run `wp cron event schedule wp_cli_test_event_2 now daily`
+    And I run `wp cron event schedule wp_cli_test_event_2 now daily`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_test_event_2'
+      """
+    And I try `wp cron event unschedule wp_cli_test_event_2`
+    Then STDOUT should contain:
+      """
+      Success: Unscheduled 2 events with hook 'wp_cli_test_event_2'.
       """
 
     When I try `wp cron event unschedule wp_cli_test_event`
