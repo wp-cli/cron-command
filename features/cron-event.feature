@@ -48,7 +48,7 @@ Feature: Manage WP Cron events
       """
 
     When I run `wp cron event schedule wp_cli_test_event_2 now hourly`
-    And I run `wp cron event schedule wp_cli_test_event_2 now hourly`
+    And I run `wp cron event schedule wp_cli_test_event_2 '+1 hour' hourly`
     And I try `wp cron event unschedule wp_cli_test_event_2`
     Then STDOUT should contain:
       """
