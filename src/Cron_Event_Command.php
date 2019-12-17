@@ -270,12 +270,12 @@ class Cron_Event_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Unchedules cron event on specific hook.
+	 * Unschedules all cron events for a given hook.
 	 *
 	 * ## OPTIONS
 	 *
 	 * <hook>
-	 * : The hook name.
+	 * : Name of the hook for which all events should be unscheduled.
 	 *
 	 * ## EXAMPLES
 	 *
@@ -285,20 +285,20 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 */
 	public function unschedule( $args, $assoc_args ) {
 
-		$hook = $args[0];
+		list( $hook ) = $args;
 
 		if ( Utils\wp_version_compare( '4.9.0', '<' ) ) {
-			WP_CLI::error( "The 'wp_unschedule_hook' function was only introduced in WordPress 4.9.0." );
+			WP_CLI::error( 'Unscheduling events is only supported from WordPress 4.9.0 onwards.' );
 		}
 
 		$unscheduled = wp_unschedule_hook( $hook );
 
 		if ( empty( $unscheduled ) ) {
-			$message = 'Event not unscheduled.';
+			$message = 'Failed to unschedule events for hook \'%1\$s.';
 
 			// If 0 event found on hook.
 			if ( 0 === $unscheduled ) {
-				$message = "No event found with hook '%1\$s'.";
+				$message = "No events found for hook '%1\$s'.";
 			}
 
 			WP_CLI::error( sprintf( $message, $hook ) );
@@ -306,9 +306,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 		} else {
 			WP_CLI::success(
 				sprintf(
-					'Unscheduled %1$d %2$s with hook \'%3$s\'.',
+					'Unscheduled %1$d %2$s for hook \'%3$s\'.',
 					$unscheduled,
-					_n( 'event', 'events', $unscheduled ),
+					Utils\pluralize( 'event', $unscheduled ),
 					$hook
 				)
 			);

@@ -315,7 +315,7 @@ There are no additional fields.
 
 ### wp cron event unschedule
 
-Unchedules cron event on specific hook.
+Unschedules all cron events for a given hook.
 
 ~~~
 wp cron event unschedule <hook>
@@ -324,7 +324,7 @@ wp cron event unschedule <hook>
 **OPTIONS**
 
 	<hook>
-		The hook name.
+		Name of the hook for which all events should be unscheduled.
 
 **EXAMPLES**
 
