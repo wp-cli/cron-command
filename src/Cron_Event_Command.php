@@ -475,7 +475,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		$since = absint( $since );
 
-		// array of time period chunks
+		// Array of time period chunks.
 		$chunks = array(
 			array( 60 * 60 * 24 * 365, 'year' ),
 			array( 60 * 60 * 24 * 30, 'month' ),
@@ -496,24 +496,24 @@ class Cron_Event_Command extends WP_CLI_Command {
 			$seconds = $chunks[ $i ][0];
 			$name    = $chunks[ $i ][1];
 
-			// finding the biggest chunk (if the chunk fits, break)
+			// Finding the biggest chunk (if the chunk fits, break).
 			$count = floor( $since / $seconds );
 			if ( floatval( 0 ) !== $count ) {
 				break;
 			}
 		}
 
-		// set output var
+		// Set output var.
 		$output = sprintf( '%d %s', $count, Utils\pluralize( $name, absint( $count ) ) );
 
-		// step two: the second chunk
+		// Step two: the second chunk.
 		if ( $i + 1 < $j ) {
 			$seconds2 = $chunks[ $i + 1 ][0];
 			$name2    = $chunks[ $i + 1 ][1];
 
 			$count2 = floor( ( $since - ( $seconds * $count ) ) / $seconds2 );
 			if ( floatval( 0 ) !== $count2 ) {
-				// add to output var
+				// Add to output var.
 				$output .= ' ' . sprintf( '%d %s', $count2, Utils\pluralize( $name2, absint( $count2 ) ) );
 			}
 		}
