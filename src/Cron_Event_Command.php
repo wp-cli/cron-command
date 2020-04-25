@@ -155,6 +155,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *     Success: Scheduled event with hook 'cron_test' for 2016-05-31 11:21:35 GMT.
 	 */
 	public function schedule( $args, $assoc_args ) {
+		if ( count( $assoc_args ) && count( array_filter( array_keys( $assoc_args ), 'is_string' ) ) ) {
+			WP_CLI::warning( 'Numeric keys should be used for the hook arguments' );
+		}
 
 		$hook       = $args[0];
 		$next_run   = Utils\get_flag_value( $args, 1, 'now' );

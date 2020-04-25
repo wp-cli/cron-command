@@ -318,3 +318,16 @@ Feature: Manage WP-Cron events and schedules
       """
       wp_cli_test_event_1 wp_cli_test_event_1
       """
+
+  Scenario: Scheduling an event with non-numerically indexed arguments
+    When I try `wp cron event schedule wp_cli_test_args_event '+10 minutes' --foo=banana --bar=apple`
+    Then STDOUT should not be empty
+    And STDERR should be:
+      """
+      Warning: Numeric keys should be used for the hook arguments
+      """
+
+    When I run `wp cron event list --format=csv --fields=hook,recurrence,args`
+    Then STDOUT should be CSV containing:
+      | hook                   | recurrence    | args                           |
+      | wp_cli_test_args_event | Non-repeating | {"foo":"banana","bar":"apple"} |
