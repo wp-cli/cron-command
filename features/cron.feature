@@ -189,13 +189,6 @@ Feature: Manage WP-Cron events and schedules
       | name   | interval |
       | hourly | 3600     |
 
-  Scenario: Testing WP-Cron
-    When I try `wp cron test`
-    Then STDERR should not contain:
-      """
-      Error:
-      """
-
   Scenario: Run multiple cron events
     When I try `wp cron event run`
     Then STDERR should be:
