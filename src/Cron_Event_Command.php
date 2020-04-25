@@ -15,7 +15,7 @@ use WP_CLI\Utils;
  *     $ wp cron event run --due-now
  *     Success: Executed a total of 2 cron events.
  *
- *     # Delete the next scheduled cron event
+ *     # Delete all scheduled cron events for the given hook
  *     $ wp cron event delete cron_test
  *     Success: Deleted 2 instances of the cron event 'cron_test'.
  *
@@ -344,7 +344,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	}
 
 	/**
-	 * Deletes the next scheduled cron event for the given hook.
+	 * Deletes all scheduled cron events for the given hook.
 	 *
 	 * ## OPTIONS
 	 *
@@ -353,7 +353,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     # Delete the next scheduled cron event
+	 *     # Delete all scheduled cron events for the given hook
 	 *     $ wp cron event delete cron_test
 	 *     Success: Deleted 2 instances of the cron event 'cron_test'.
 	 */
