@@ -138,7 +138,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * : How often the event should recur. See `wp cron schedule list` for available schedule names. Defaults to no recurrence.
 	 *
 	 * [--<field>=<value>]
-	 * : Associative args for the event.
+	 * : Arguments to pass to the hook for the event. <field> should be a numeric key, not a string.
 	 *
 	 * ## EXAMPLES
 	 *
@@ -150,11 +150,14 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *     $ wp cron event schedule cron_test now hourly
 	 *     Success: Scheduled event with hook 'cron_test' for 2016-05-31 10:20:32 GMT.
 	 *
-	 *     # Schedule new cron event and pass associative arguments
-	 *     $ wp cron event schedule cron_test '+1 hour' --foo=1 --bar=2
+	 *     # Schedule new cron event and pass arguments
+	 *     $ wp cron event schedule cron_test '+1 hour' --0=first-argument --1=second-argument
 	 *     Success: Scheduled event with hook 'cron_test' for 2016-05-31 11:21:35 GMT.
 	 */
 	public function schedule( $args, $assoc_args ) {
+		if ( count( $assoc_args ) && count( array_filter( array_keys( $assoc_args ), 'is_string' ) ) ) {
+			WP_CLI::warning( 'Numeric keys should be used for the hook arguments.' );
+		}
 
 		$hook       = $args[0];
 		$next_run   = Utils\get_flag_value( $args, 1, 'now' );
