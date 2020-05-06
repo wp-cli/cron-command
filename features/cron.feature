@@ -324,7 +324,7 @@ Feature: Manage WP-Cron events and schedules
     Then STDOUT should not be empty
     And STDERR should be:
       """
-      Warning: Numeric keys should be used for the hook arguments
+      Warning: Numeric keys should be used for the hook arguments.
       """
 
     When I run `wp cron event list --format=csv --fields=hook,recurrence,args`
