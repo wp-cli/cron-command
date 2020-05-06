@@ -5,7 +5,7 @@ Feature: Manage WP-Cron events and schedules
     And I run `wp config set DISABLE_WP_CRON false --raw --type=constant --anchor='// ** MySQL settings - You can get this info from your web host ** //'`
 
   Scenario: Scheduling and then deleting an event
-    When I run `wp cron event schedule wp_cli_test_event_1 '+1 hour 5 minutes' --apple=banana`
+    When I run `wp cron event schedule wp_cli_test_event_1 '+1 hour 5 minutes' --0=banana`
     Then STDOUT should contain:
       """
       Success: Scheduled event with hook 'wp_cli_test_event_1'
@@ -13,8 +13,8 @@ Feature: Manage WP-Cron events and schedules
 
     When I run `wp cron event list --format=csv --fields=hook,recurrence,args`
     Then STDOUT should be CSV containing:
-      | hook                | recurrence      | args                |
-      | wp_cli_test_event_1 | Non-repeating   | {"apple":"banana"}  |
+      | hook                | recurrence      | args       |
+      | wp_cli_test_event_1 | Non-repeating   | ["banana"] |
 
     When I run `wp cron event list --fields=hook,next_run_relative | grep wp_cli_test_event_1`
     Then STDOUT should contain:
@@ -74,15 +74,15 @@ Feature: Manage WP-Cron events and schedules
       """
 
   Scenario: Scheduling, running, and deleting duplicate events
-    When I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --apple=banana`
-    When I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --foo=bar`
+    When I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --0=banana`
+    When I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --0=bar`
     Then STDOUT should not be empty
 
     When I run `wp cron event list --format=csv --fields=hook,recurrence,args`
     Then STDOUT should be CSV containing:
-      | hook                | recurrence    | args                |
-      | wp_cli_test_event_5 | Non-repeating | {"apple":"banana"}  |
-      | wp_cli_test_event_5 | Non-repeating | {"foo":"bar"}       |
+      | hook                | recurrence    | args       |
+      | wp_cli_test_event_5 | Non-repeating | ["banana"] |
+      | wp_cli_test_event_5 | Non-repeating | ["bar"]    |
 
     When I run `wp cron event run wp_cli_test_event_5`
     Then STDOUT should contain:
@@ -110,8 +110,8 @@ Feature: Manage WP-Cron events and schedules
       Error: Invalid cron event 'wp_cli_test_event_5'
       """
 
-    When I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --apple=banana`
-    When I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --foo=bar`
+    When I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --0=banana`
+    When I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --0=bar`
     Then STDOUT should not be empty
 
     When I run `wp cron event list`
@@ -318,3 +318,16 @@ Feature: Manage WP-Cron events and schedules
       """
       wp_cli_test_event_1 wp_cli_test_event_1
       """
+
+  Scenario: Scheduling an event with non-numerically indexed arguments
+    When I try `wp cron event schedule wp_cli_test_args_event '+10 minutes' --foo=banana --bar=apple`
+    Then STDOUT should not be empty
+    And STDERR should be:
+      """
+      Warning: Numeric keys should be used for the hook arguments.
+      """
+
+    When I run `wp cron event list --format=csv --fields=hook,recurrence,args`
+    Then STDOUT should be CSV containing:
+      | hook                   | recurrence    | args                           |
+      | wp_cli_test_args_event | Non-repeating | {"foo":"banana","bar":"apple"} |
