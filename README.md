@@ -311,6 +311,27 @@ There are no additional fields.
     $ wp cron schedule list --fields=name --format=ids
     hourly twicedaily daily
 
+
+
+### wp cron event unschedule
+
+Unschedules all cron events for a given hook.
+
+~~~
+wp cron event unschedule <hook>
+~~~
+
+**OPTIONS**
+
+	<hook>
+		Name of the hook for which all events should be unscheduled.
+
+**EXAMPLES**
+
+    # Unschedule a cron event on given hook.
+    $ wp cron event unschedule cron_test
+    Success: Unscheduled 2 events with hook 'cron_test'.
+
 ## Installing
 
 This package is included with WP-CLI itself, no additional installation necessary.
@@ -343,7 +364,7 @@ Once you've decided to commit the time to seeing your pull request through, [ple
 
 ## Support
 
-Github issues aren't for general support questions, but there are other venues you can try: https://wp-cli.org/#support
+GitHub issues aren't for general support questions, but there are other venues you can try: https://wp-cli.org/#support
 
 
 *This README.md is generated dynamically from the project's codebase using `wp scaffold package-readme` ([doc](https://github.com/wp-cli/scaffold-package-command#wp-scaffold-package-readme)). To suggest changes, please submit a pull request against the corresponding part of the codebase.*
