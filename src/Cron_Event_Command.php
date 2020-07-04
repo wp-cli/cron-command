@@ -138,7 +138,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * : How often the event should recur. See `wp cron schedule list` for available schedule names. Defaults to no recurrence.
 	 *
 	 * [--<field>=<value>]
-	 * : Associative args for the event.
+	 * : Arguments to pass to the hook for the event. <field> should be a numeric key, not a string.
 	 *
 	 * ## EXAMPLES
 	 *
@@ -150,11 +150,14 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *     $ wp cron event schedule cron_test now hourly
 	 *     Success: Scheduled event with hook 'cron_test' for 2016-05-31 10:20:32 GMT.
 	 *
-	 *     # Schedule new cron event and pass associative arguments
-	 *     $ wp cron event schedule cron_test '+1 hour' --foo=1 --bar=2
+	 *     # Schedule new cron event and pass arguments
+	 *     $ wp cron event schedule cron_test '+1 hour' --0=first-argument --1=second-argument
 	 *     Success: Scheduled event with hook 'cron_test' for 2016-05-31 11:21:35 GMT.
 	 */
 	public function schedule( $args, $assoc_args ) {
+		if ( count( $assoc_args ) && count( array_filter( array_keys( $assoc_args ), 'is_string' ) ) ) {
+			WP_CLI::warning( 'Numeric keys should be used for the hook arguments.' );
+		}
 
 		$hook       = $args[0];
 		$next_run   = Utils\get_flag_value( $args, 1, 'now' );
@@ -267,6 +270,53 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		$message = ( 1 === $executed ) ? 'Executed a total of %d cron event.' : 'Executed a total of %d cron events.';
 		WP_CLI::success( sprintf( $message, $executed ) );
+	}
+
+	/**
+	 * Unschedules all cron events for a given hook.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <hook>
+	 * : Name of the hook for which all events should be unscheduled.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Unschedule a cron event on given hook.
+	 *     $ wp cron event unschedule cron_test
+	 *     Success: Unscheduled 2 events with hook 'cron_test'.
+	 */
+	public function unschedule( $args, $assoc_args ) {
+
+		list( $hook ) = $args;
+
+		if ( Utils\wp_version_compare( '4.9.0', '<' ) ) {
+			WP_CLI::error( 'Unscheduling events is only supported from WordPress 4.9.0 onwards.' );
+		}
+
+		$unscheduled = wp_unschedule_hook( $hook );
+
+		if ( empty( $unscheduled ) ) {
+			$message = 'Failed to unschedule events for hook \'%1\$s.';
+
+			// If 0 event found on hook.
+			if ( 0 === $unscheduled ) {
+				$message = "No events found for hook '%1\$s'.";
+			}
+
+			WP_CLI::error( sprintf( $message, $hook ) );
+
+		} else {
+			WP_CLI::success(
+				sprintf(
+					'Unscheduled %1$d %2$s for hook \'%3$s\'.',
+					$unscheduled,
+					Utils\pluralize( 'event', $unscheduled ),
+					$hook
+				)
+			);
+		}
+
 	}
 
 	/**
@@ -428,7 +478,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		$since = absint( $since );
 
-		// array of time period chunks
+		// Array of time period chunks.
 		$chunks = array(
 			array( 60 * 60 * 24 * 365, 'year' ),
 			array( 60 * 60 * 24 * 30, 'month' ),
@@ -449,24 +499,24 @@ class Cron_Event_Command extends WP_CLI_Command {
 			$seconds = $chunks[ $i ][0];
 			$name    = $chunks[ $i ][1];
 
-			// finding the biggest chunk (if the chunk fits, break)
+			// Finding the biggest chunk (if the chunk fits, break).
 			$count = floor( $since / $seconds );
 			if ( floatval( 0 ) !== $count ) {
 				break;
 			}
 		}
 
-		// set output var
+		// Set output var.
 		$output = sprintf( '%d %s', $count, Utils\pluralize( $name, absint( $count ) ) );
 
-		// step two: the second chunk
+		// Step two: the second chunk.
 		if ( $i + 1 < $j ) {
 			$seconds2 = $chunks[ $i + 1 ][0];
 			$name2    = $chunks[ $i + 1 ][1];
 
 			$count2 = floor( ( $since - ( $seconds * $count ) ) / $seconds2 );
 			if ( floatval( 0 ) !== $count2 ) {
-				// add to output var
+				// Add to output var.
 				$output .= ' ' . sprintf( '%d %s', $count2, Utils\pluralize( $name2, absint( $count2 ) ) );
 			}
 		}
