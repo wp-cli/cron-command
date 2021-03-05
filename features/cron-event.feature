@@ -4,7 +4,8 @@ Feature: Manage WP Cron events
     Given a WP install
 
   Scenario: --due-now with supplied events should only run those
-    When I run `wp cron event run --all`
+    # WP throws a notice here for older versions of core.
+    When I try `wp cron event run --all`
     Then STDOUT should contain:
       """
       Success: Executed a total of
