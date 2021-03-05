@@ -217,7 +217,8 @@ Feature: Manage WP-Cron events and schedules
       Success: Executed a total of 2 cron events.
       """
 
-    When I run `wp cron event run --all`
+    # WP throws a notice here for older versions of core.
+    When I try `wp cron event run --all`
     Then STDOUT should contain:
       """
       Executed the cron event 'wp_version_check'
@@ -236,7 +237,8 @@ Feature: Manage WP-Cron events and schedules
       """
 
   Scenario: Run currently scheduled events
-    When I run `wp cron event run --all`
+    # WP throws a notice here for older versions of core.
+    When I try `wp cron event run --all`
     Then STDOUT should contain:
       """
       Executed the cron event 'wp_version_check'
