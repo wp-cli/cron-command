@@ -3,7 +3,7 @@ wp-cli/cron-command
 
 Tests, runs, and deletes WP-Cron events; manages WP-Cron schedules.
 
-[![Build Status](https://travis-ci.org/wp-cli/cron-command.svg?branch=master)](https://travis-ci.org/wp-cli/cron-command)
+
 
 Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contributing) | [Support](#support)
 
@@ -69,7 +69,7 @@ wp cron event
     $ wp cron event run --due-now
     Success: Executed a total of 2 cron events.
 
-    # Delete the next scheduled cron event
+    # Delete all scheduled cron events for the given hook
     $ wp cron event delete cron_test
     Success: Deleted 2 instances of the cron event 'cron_test'.
 
@@ -83,7 +83,7 @@ wp cron event
 
 ### wp cron event delete
 
-Deletes the next scheduled cron event for the given hook.
+Deletes all scheduled cron events for the given hook.
 
 ~~~
 wp cron event delete <hook>
@@ -96,7 +96,7 @@ wp cron event delete <hook>
 
 **EXAMPLES**
 
-    # Delete the next scheduled cron event
+    # Delete all scheduled cron events for the given hook
     $ wp cron event delete cron_test
     Success: Deleted 2 instances of the cron event 'cron_test'.
 
@@ -215,7 +215,7 @@ wp cron event schedule <hook> [<next-run>] [<recurrence>] [--<field>=<value>]
 		How often the event should recur. See `wp cron schedule list` for available schedule names. Defaults to no recurrence.
 
 	[--<field>=<value>]
-		Associative args for the event.
+		Arguments to pass to the hook for the event. <field> should be a numeric key, not a string.
 
 **EXAMPLES**
 
@@ -227,8 +227,8 @@ wp cron event schedule <hook> [<next-run>] [<recurrence>] [--<field>=<value>]
     $ wp cron event schedule cron_test now hourly
     Success: Scheduled event with hook 'cron_test' for 2016-05-31 10:20:32 GMT.
 
-    # Schedule new cron event and pass associative arguments
-    $ wp cron event schedule cron_test '+1 hour' --foo=1 --bar=2
+    # Schedule new cron event and pass arguments
+    $ wp cron event schedule cron_test '+1 hour' --0=first-argument --1=second-argument
     Success: Scheduled event with hook 'cron_test' for 2016-05-31 11:21:35 GMT.
 
 
@@ -364,7 +364,7 @@ Once you've decided to commit the time to seeing your pull request through, [ple
 
 ## Support
 
-GitHub issues aren't for general support questions, but there are other venues you can try: https://wp-cli.org/#support
+Github issues aren't for general support questions, but there are other venues you can try: https://wp-cli.org/#support
 
 
 *This README.md is generated dynamically from the project's codebase using `wp scaffold package-readme` ([doc](https://github.com/wp-cli/scaffold-package-command#wp-scaffold-package-readme)). To suggest changes, please submit a pull request against the corresponding part of the codebase.*
