@@ -305,7 +305,7 @@ Feature: Manage WP-Cron events and schedules
     When I run `wp option get home`
     Then STDOUT should be:
       """
-      http://example.com
+      https://example.com
       """
 
   Scenario: Listing duplicated cron events
