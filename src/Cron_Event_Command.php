@@ -1,5 +1,6 @@
 <?php
 
+use WP_CLI\Formatter;
 use WP_CLI\Utils;
 
 /**
@@ -27,14 +28,14 @@ use WP_CLI\Utils;
  */
 class Cron_Event_Command extends WP_CLI_Command {
 
-	private $fields = array(
+	const FIELDS = [
 		'hook',
 		'next_run_gmt',
 		'next_run_relative',
 		'recurrence',
-	);
+	];
 
-	private static $time_format = 'Y-m-d H:i:s';
+	const TIME_FORMAT = 'Y-m-d H:i:s';
 
 	/**
 	 * Lists scheduled cron events.
@@ -100,14 +101,14 @@ class Cron_Event_Command extends WP_CLI_Command {
 	public function list_( $args, $assoc_args ) {
 		$formatter = $this->get_formatter( $assoc_args );
 
-		$events = self::get_cron_events();
+		$events = $this->get_cron_events();
 
 		if ( is_wp_error( $events ) ) {
-			$events = array();
+			$events = [];
 		}
 
 		foreach ( $events as $key => $event ) {
-			foreach ( $this->fields as $field ) {
+			foreach ( self::FIELDS as $field ) {
 				if ( ! empty( $assoc_args[ $field ] ) && $event->{$field} !== $assoc_args[ $field ] ) {
 					unset( $events[ $key ] );
 					break;
@@ -192,7 +193,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		}
 
 		if ( false !== $event ) {
-			WP_CLI::success( sprintf( "Scheduled event with hook '%s' for %s GMT.", $hook, date( self::$time_format, $timestamp ) ) ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
+			WP_CLI::success( sprintf( "Scheduled event with hook '%s' for %s GMT.", $hook, date( self::TIME_FORMAT, $timestamp ) ) ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 		} else {
 			WP_CLI::error( 'Event not scheduled.' );
 		}
@@ -225,7 +226,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::error( 'Please specify one or more cron events, or use --due-now/--all.' );
 		}
 
-		$events = self::get_cron_events();
+		$events = $this->get_cron_events();
 
 		if ( is_wp_error( $events ) ) {
 			WP_CLI::error( $events );
@@ -239,7 +240,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		}
 
 		if ( Utils\get_flag_value( $assoc_args, 'due-now' ) ) {
-			$due_events = array();
+			$due_events = [];
 			foreach ( $events as $event ) {
 				if ( ! empty( $args ) && ! in_array( $event->hook, $args, true ) ) {
 					continue;
@@ -250,7 +251,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			}
 			$events = $due_events;
 		} elseif ( ! Utils\get_flag_value( $assoc_args, 'all' ) ) {
-			$due_events = array();
+			$due_events = [];
 			foreach ( $events as $event ) {
 				if ( in_array( $event->hook, $args, true ) ) {
 					$due_events[] = $event;
@@ -262,7 +263,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		$executed = 0;
 		foreach ( $events as $event ) {
 			$start   = microtime( true );
-			$success = self::run_event( $event );
+			$success = $this->run_event( $event );
 			$total   = round( microtime( true ) - $start, 3 );
 			if ( $success ) {
 				$executed++;
@@ -333,7 +334,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * @param stdClass $event The event
 	 * @return bool Whether the event was successfully executed or not.
 	 */
-	protected static function run_event( stdClass $event ) {
+	protected function run_event( stdClass $event ) {
 		if ( ! defined( 'DOING_CRON' ) ) {
 			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Using native WordPress constant.
 			define( 'DOING_CRON', true );
@@ -341,7 +342,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		$gmt_time = microtime( true );
 
-		$doing_wp_cron = static::get_cron_lock();
+		$doing_wp_cron = $this->get_cron_lock();
 
 		if ( $doing_wp_cron
 			&& ( $doing_wp_cron + WP_CRON_LOCK_TIMEOUT > $gmt_time ) ) {
@@ -357,7 +358,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		}
 
 		if ( false !== $event->schedule ) {
-			$new_args = array( $event->time, $event->schedule, $event->hook, $event->args );
+			$new_args = [ $event->time, $event->schedule, $event->hook, $event->args ];
 			call_user_func_array( 'wp_reschedule_event', $new_args );
 		}
 
@@ -366,7 +367,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Can't prefix dynamic hooks here, calling registered hooks.
 		do_action_ref_array( $event->hook, $event->args );
 
-		if ( static::get_cron_lock() === $doing_wp_cron ) {
+		if ( $this->get_cron_lock() === $doing_wp_cron ) {
 			delete_transient( 'doing_cron' );
 		}
 
@@ -390,7 +391,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	public function delete( $args, $assoc_args ) {
 
 		$hook   = $args[0];
-		$events = self::get_cron_events();
+		$events = $this->get_cron_events();
 
 		if ( is_wp_error( $events ) ) {
 			WP_CLI::error( $events );
@@ -399,7 +400,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		$deleted = 0;
 		foreach ( $events as $event ) {
 			if ( $event->hook === $hook ) {
-				$result = self::delete_event( $event );
+				$result = $this->delete_event( $event );
 				if ( $result ) {
 					$deleted++;
 				} else {
@@ -423,7 +424,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * @param stdClass $event The event
 	 * @return bool Whether the event was successfully deleted or not.
 	 */
-	protected static function delete_event( stdClass $event ) {
+	protected function delete_event( stdClass $event ) {
 		$crons = _get_cron_array();
 
 		if ( ! isset( $crons[ $event->time ][ $event->hook ][ $event->sig ] ) ) {
@@ -440,12 +441,12 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * @param stdClass $event The event.
 	 * @return stdClass The formatted event object.
 	 */
-	protected static function format_event( stdClass $event ) {
+	protected function format_event( stdClass $event ) {
 
-		$event->next_run          = get_date_from_gmt( date( 'Y-m-d H:i:s', $event->time ), self::$time_format ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
-		$event->next_run_gmt      = date( self::$time_format, $event->time ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
-		$event->next_run_relative = self::interval( $event->time - time() );
-		$event->recurrence        = ( $event->schedule ) ? self::interval( $event->interval ) : 'Non-repeating';
+		$event->next_run          = get_date_from_gmt( date( 'Y-m-d H:i:s', $event->time ), self::TIME_FORMAT ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
+		$event->next_run_gmt      = date( self::TIME_FORMAT, $event->time ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
+		$event->next_run_relative = $this->interval( $event->time - time() );
+		$event->recurrence        = ( $event->schedule ) ? $this->interval( $event->interval ) : 'Non-repeating';
 
 		return $event;
 	}
@@ -455,10 +456,10 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *
 	 * @return array|WP_Error An array of event objects, or a WP_Error object if there are no events scheduled.
 	 */
-	protected static function get_cron_events() {
+	protected function get_cron_events() {
 
 		$crons  = _get_cron_array();
-		$events = array();
+		$events = [];
 
 		if ( empty( $crons ) ) {
 			return new WP_Error(
@@ -471,20 +472,20 @@ class Cron_Event_Command extends WP_CLI_Command {
 			foreach ( $hooks as $hook => $hook_events ) {
 				foreach ( $hook_events as $sig => $data ) {
 
-					$events[] = (object) array(
+					$events[] = (object) [
 						'hook'     => $hook,
 						'time'     => $time,
 						'sig'      => $sig,
 						'args'     => $data['args'],
 						'schedule' => $data['schedule'],
 						'interval' => Utils\get_flag_value( $data, 'interval' ),
-					);
+					];
 
 				}
 			}
 		}
 
-		$events = array_map( 'Cron_Event_Command::format_event', $events );
+		$events = array_map( [ $this, 'format_event' ], $events );
 
 		return $events;
 
@@ -498,7 +499,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * @param int $since An interval of time in seconds
 	 * @return string The interval in human readable format
 	 */
-	private static function interval( $since ) {
+	private function interval( $since ) {
 		if ( $since <= 0 ) {
 			return 'now';
 		}
@@ -506,15 +507,15 @@ class Cron_Event_Command extends WP_CLI_Command {
 		$since = absint( $since );
 
 		// Array of time period chunks.
-		$chunks = array(
-			array( 60 * 60 * 24 * 365, 'year' ),
-			array( 60 * 60 * 24 * 30, 'month' ),
-			array( 60 * 60 * 24 * 7, 'week' ),
-			array( 60 * 60 * 24, 'day' ),
-			array( 60 * 60, 'hour' ),
-			array( 60, 'minute' ),
-			array( 1, 'second' ),
-		);
+		$chunks = [
+			[ 60 * 60 * 24 * 365, 'year' ],
+			[ 60 * 60 * 24 * 30, 'month' ],
+			[ 60 * 60 * 24 * 7, 'week' ],
+			[ 60 * 60 * 24, 'day' ],
+			[ 60 * 60, 'hour' ],
+			[ 60, 'minute' ],
+			[ 1, 'second' ],
+		];
 
 		// we only want to output two chunks of time here, eg:
 		// x years, xx months
@@ -552,7 +553,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	}
 
 	private function get_formatter( &$assoc_args ) {
-		return new \WP_CLI\Formatter( $assoc_args, $this->fields, 'event' );
+		return new Formatter( $assoc_args, self::FIELDS, 'event' );
 	}
 
 	/**
@@ -566,7 +567,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *
 	 * @return string|false Value of the `doing_cron` transient, 0|false otherwise.
 	 */
-	private static function get_cron_lock() {
+	private function get_cron_lock() {
 		global $wpdb;
 		$value = 0;
 		if ( wp_using_ext_object_cache() ) {

@@ -1,5 +1,7 @@
 <?php
 
+use WP_CLI\Utils;
+
 /**
  * Tests, runs, and deletes WP-Cron events; manages WP-Cron schedules.
  *
@@ -64,21 +66,21 @@ class Cron_Command extends WP_CLI_Command {
 	 *
 	 * @return WP_Error|array The response or WP_Error on failure.
 	 */
-	protected static function get_cron_spawn() {
+	protected function get_cron_spawn() {
 
-		$sslverify     = \WP_CLI\Utils\wp_version_compare( 4.0, '<' );
+		$sslverify     = Utils\wp_version_compare( 4.0, '<' );
 		$doing_wp_cron = sprintf( '%.22F', microtime( true ) );
 
-		$cron_request_array = array(
+		$cron_request_array = [
 			'url'  => site_url( 'wp-cron.php?doing_wp_cron=' . $doing_wp_cron ),
 			'key'  => $doing_wp_cron,
-			'args' => array(
+			'args' => [
 				'timeout'   => 3,
 				'blocking'  => true,
 				// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Calling native WordPress hook.
 				'sslverify' => apply_filters( 'https_local_ssl_verify', $sslverify ),
-			),
-		);
+			],
+		];
 
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Calling native WordPress hook.
 		$cron_request = apply_filters( 'cron_request', $cron_request_array );
@@ -89,7 +91,5 @@ class Cron_Command extends WP_CLI_Command {
 		$result = wp_remote_post( $cron_request['url'], $cron_request['args'] );
 
 		return $result;
-
 	}
-
 }
