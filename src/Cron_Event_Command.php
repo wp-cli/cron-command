@@ -213,6 +213,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * [--all]
 	 * : Run all hooks.
 	 *
+	 * [--exclude]
+	 * : A comma separated list of hooks to exclude.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Run all cron events due right now
@@ -225,7 +228,14 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::error( 'Please specify one or more cron events, or use --due-now/--all.' );
 		}
 
-		$events = self::get_cron_events();
+		$exclude = explode( ',', Utils\get_flag_value( $assoc_args, 'exclude' ) );
+
+		$events = array_filter(
+			self::get_cron_events(),
+			function ( $event ) use ( $exclude ) {
+				return ! in_array( $event->hook, $exclude, true );
+			}
+		);
 
 		if ( is_wp_error( $events ) ) {
 			WP_CLI::error( $events );
