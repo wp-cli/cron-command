@@ -39,6 +39,12 @@ Feature: Manage WP Cron events
       Executed a total of 1 cron event
       """
 
+    When I run `wp cron event run --due-now --exclude=wp_cli_test_event_2`
+    Then STDOUT should contain:
+      """
+      Success: Executed a total of 0 cron events.
+      """
+
   @require-wp-4.9.0
   Scenario: Unschedule cron event
     When I run `wp cron event schedule wp_cli_test_event_1 now hourly`
