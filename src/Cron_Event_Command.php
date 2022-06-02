@@ -220,6 +220,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *     Success: Executed a total of 2 cron events.
 	 */
 	public function run( $args, $assoc_args ) {
+
 		if ( empty( $args ) && ! Utils\get_flag_value( $assoc_args, 'due-now' ) && ! Utils\get_flag_value( $assoc_args, 'all' ) ) {
 			WP_CLI::error( 'Please specify one or more cron events, or use --due-now/--all.' );
 		}
