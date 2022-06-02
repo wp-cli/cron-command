@@ -37,7 +37,8 @@ Feature: Manage WP-Cron events and schedules
     When I run `wp cron event delete wp_cli_test_event_1`
     Then STDOUT should contain:
       """
-      Success: Deleted the cron event 'wp_cli_test_event_1'
+      Deleted the cron event 'wp_cli_test_event_1'
+      Success: Deleted a total of 1 cron event.
       """
 
     When I run `wp cron event list`
@@ -123,7 +124,9 @@ Feature: Manage WP-Cron events and schedules
     When I run `wp cron event delete wp_cli_test_event_5`
     Then STDOUT should be:
       """
-      Success: Deleted 2 instances of the cron event 'wp_cli_test_event_5'.
+      Deleted the cron event 'wp_cli_test_event_5'
+      Deleted the cron event 'wp_cli_test_event_5'
+      Success: Deleted a total of 2 cron events.
       """
 
     When I run `wp cron event list`
@@ -135,7 +138,7 @@ Feature: Manage WP-Cron events and schedules
     When I try `wp cron event delete wp_cli_test_event_5`
     Then STDERR should be:
       """
-      Error: Invalid cron event 'wp_cli_test_event_5'.
+      Error: Invalid cron event 'wp_cli_test_event_5'
       """
 
   Scenario: Scheduling and then running a re-occurring event
@@ -174,7 +177,8 @@ Feature: Manage WP-Cron events and schedules
     When I run `wp cron event delete wp_cli_test_event_2`
     Then STDOUT should contain:
       """
-      Success: Deleted the cron event 'wp_cli_test_event_2'
+      Deleted the cron event 'wp_cli_test_event_2'
+      Success: Deleted a total of 1 cron event.
       """
 
     When I run `wp cron event list`
@@ -360,3 +364,29 @@ Feature: Manage WP-Cron events and schedules
     Then STDOUT should be CSV containing:
       | hook                   | recurrence    | args                           |
       | wp_cli_test_args_event | Non-repeating | {"foo":"banana","bar":"apple"} |
+
+Scenario: Delete all cron events
+    When I try `wp cron event delete`
+    Then STDERR should be:
+      """
+      Error: Please specify one or more cron events, or use --all.
+      """
+
+    # WP throws a notice here for older versions of core.
+    When I try `wp cron event delete --all`
+    Then STDOUT should contain:
+      """
+      Deleted the cron event 'wp_version_check'
+      """
+    And STDOUT should contain:
+      """
+      Deleted the cron event 'wp_update_plugins'
+      """
+    And STDOUT should contain:
+      """
+      Deleted the cron event 'wp_update_themes'
+      """
+    And STDOUT should contain:
+      """
+      Success: Deleted a total of
+      """
