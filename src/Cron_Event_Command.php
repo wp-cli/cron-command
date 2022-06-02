@@ -220,43 +220,10 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *     Success: Executed a total of 2 cron events.
 	 */
 	public function run( $args, $assoc_args ) {
-
-		if ( empty( $args ) && ! Utils\get_flag_value( $assoc_args, 'due-now' ) && ! Utils\get_flag_value( $assoc_args, 'all' ) ) {
-			WP_CLI::error( 'Please specify one or more cron events, or use --due-now/--all.' );
-		}
-
-		$events = self::get_cron_events();
+		$events = self::get_selected_cron_events( $args, $assoc_args );
 
 		if ( is_wp_error( $events ) ) {
 			WP_CLI::error( $events );
-		}
-
-		$hooks = wp_list_pluck( $events, 'hook' );
-		foreach ( $args as $hook ) {
-			if ( ! in_array( $hook, $hooks, true ) ) {
-				WP_CLI::error( sprintf( "Invalid cron event '%s'", $hook ) );
-			}
-		}
-
-		if ( Utils\get_flag_value( $assoc_args, 'due-now' ) ) {
-			$due_events = array();
-			foreach ( $events as $event ) {
-				if ( ! empty( $args ) && ! in_array( $event->hook, $args, true ) ) {
-					continue;
-				}
-				if ( time() >= $event->time ) {
-					$due_events[] = $event;
-				}
-			}
-			$events = $due_events;
-		} elseif ( ! Utils\get_flag_value( $assoc_args, 'all' ) ) {
-			$due_events = array();
-			foreach ( $events as $event ) {
-				if ( in_array( $event->hook, $args, true ) ) {
-					$due_events[] = $event;
-				}
-			}
-			$events = $due_events;
 		}
 
 		$executed = 0;
@@ -316,7 +283,50 @@ class Cron_Event_Command extends WP_CLI_Command {
 				)
 			);
 		}
+	}
 
+	/**
+	 * Deletes all scheduled cron events for the given hook.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [<hook>...]
+	 * : One or more hooks to delete
+	 *
+	 * [--due-now]
+	 * : Run all hooks due right now.
+	 *
+	 * [--all]
+	 * : Delete all hooks.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Delete all scheduled cron events for the given hook
+	 *     $ wp cron event delete cron_test
+	 *     Success: Deleted 2 instances of the cron event 'cron_test'.
+	 */
+	public function delete( $args, $assoc_args ) {
+		$events = self::get_selected_cron_events( $args, $assoc_args );
+
+		if ( is_wp_error( $events ) ) {
+			WP_CLI::error( $events );
+		}
+
+		$deleted = 0;
+		foreach ( $events as $event ) {
+			$result = self::delete_event( $event );
+			if ( $result ) {
+				$deleted++;
+				WP_CLI::log( sprintf( "Deleted the cron event '%s'", $event->hook ) );
+			}
+		}
+
+		if ( $deleted ) {
+			$message = ( 1 === $deleted ) ? 'Deleted a total of %d cron event.' : 'Deleted a total of %d cron events.';
+			WP_CLI::success( sprintf( $message, $deleted ) );
+		} else {
+			WP_CLI::error( 'Could not delete any cron events.' );
+		}
 	}
 
 	/**
@@ -344,68 +354,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		return true;
 
-	}
-
-	/**
-	 * Deletes all scheduled cron events for the given hook.
-	 *
-	 * ## OPTIONS
-	 *
-	 * [<hook>...]
-	 * : One or more hooks to delete
-	 *
-	 * [--all]
-	 * : Delete all hooks.
-	 *
-	 * ## EXAMPLES
-	 *
-	 *     # Delete all scheduled cron events for the given hook
-	 *     $ wp cron event delete cron_test
-	 *     Success: Deleted 2 instances of the cron event 'cron_test'.
-	 */
-	public function delete( $args, $assoc_args ) {
-		if ( empty( $args ) && ! Utils\get_flag_value( $assoc_args, 'all' ) ) {
-			WP_CLI::error( 'Please specify one or more cron events, or use --all.' );
-		}
-
-		$events = self::get_cron_events();
-
-		if ( is_wp_error( $events ) ) {
-			WP_CLI::error( $events );
-		}
-
-		$hooks = wp_list_pluck( $events, 'hook' );
-		foreach ( $args as $hook ) {
-			if ( ! in_array( $hook, $hooks, true ) ) {
-				WP_CLI::error( sprintf( "Invalid cron event '%s'", $hook ) );
-			}
-		}
-
-		if ( ! Utils\get_flag_value( $assoc_args, 'all' ) ) {
-			$due_events = array();
-			foreach ( $events as $event ) {
-				if ( in_array( $event->hook, $args, true ) ) {
-					$due_events[] = $event;
-				}
-			}
-			$events = $due_events;
-		}
-
-		$deleted = 0;
-		foreach ( $events as $event ) {
-			$result = self::delete_event( $event );
-			if ( $result ) {
-				$deleted++;
-				WP_CLI::log( sprintf( "Deleted the cron event '%s'", $event->hook ) );
-			}
-		}
-
-		if ( $deleted ) {
-			$message = ( 1 === $deleted ) ? 'Deleted a total of %d cron event.' : 'Deleted a total of %d cron events.';
-			WP_CLI::success( sprintf( $message, $deleted ) );
-		} else {
-			WP_CLI::error( 'Could not delete any cron events.' );
-		}
 	}
 
 	/**
@@ -479,6 +427,56 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		return $events;
 
+	}
+
+	/**
+	 * Fetches an array of scheduled cron events selected by the user.
+	 *
+	 * @param array $args       A list of event names
+	 * @param array $assoc_args An associative list of CLI parameters
+	 *
+	 * @return array|WP_Error An array of objects, or a WP_Error object is there are no events scheduled.
+	 */
+	protected static function get_selected_cron_events( $args, $assoc_args ) {
+		if ( empty( $args ) && ! Utils\get_flag_value( $assoc_args, 'due-now' ) && ! Utils\get_flag_value( $assoc_args, 'all' ) ) {
+			WP_CLI::error( 'Please specify one or more cron events, or use --due-now/--all.' );
+		}
+
+		$events = self::get_cron_events();
+
+		if ( is_wp_error( $events ) ) {
+			return $events;
+		}
+
+		$hooks = wp_list_pluck( $events, 'hook' );
+		foreach ( $args as $hook ) {
+			if ( ! in_array( $hook, $hooks, true ) ) {
+				WP_CLI::error( sprintf( "Invalid cron event '%s'", $hook ) );
+			}
+		}
+
+		if ( Utils\get_flag_value( $assoc_args, 'due-now' ) ) {
+			$due_events = array();
+			foreach ( $events as $event ) {
+				if ( ! empty( $args ) && ! in_array( $event->hook, $args, true ) ) {
+					continue;
+				}
+				if ( time() >= $event->time ) {
+					$due_events[] = $event;
+				}
+			}
+			$events = $due_events;
+		} elseif ( ! Utils\get_flag_value( $assoc_args, 'all' ) ) {
+			$due_events = array();
+			foreach ( $events as $event ) {
+				if ( in_array( $event->hook, $args, true ) ) {
+					$due_events[] = $event;
+				}
+			}
+			$events = $due_events;
+		}
+
+		return $events;
 	}
 
 	/**

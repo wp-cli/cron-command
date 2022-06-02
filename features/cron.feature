@@ -369,7 +369,7 @@ Scenario: Delete all cron events
     When I try `wp cron event delete`
     Then STDERR should be:
       """
-      Error: Please specify one or more cron events, or use --all.
+      Error: Please specify one or more cron events, or use --due-now/--all.
       """
 
     # WP throws a notice here for older versions of core.
