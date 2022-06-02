@@ -329,14 +329,8 @@ wp cron event unschedule <hook>
 
 **OPTIONS**
 
-	[<hook>...]
-		One or more hooks for which all events should be unscheduled.
-
-	[--due-now]
-		Unschedule all events for all hooks due right now.
-
-	[--all]
-		Unschedule all events for all hooks.
+	<hook>
+		Name of the hook for which all events should be unscheduled.
 
 **EXAMPLES**
 
