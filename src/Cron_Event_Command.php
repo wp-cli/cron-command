@@ -244,14 +244,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *
 	 * ## OPTIONS
 	 *
-	 * [<hook>...]
-	 * : One or more hooks for which all events should be unscheduled.
-	 *
-	 * [--due-now]
-	 * : Unschedule all events for all hooks due right now.
-	 *
-	 * [--all]
-	 * : Unschedule all events for all hooks.
+	 * <hook>
+	 * : Name of the hook for which all events should be unscheduled.
 	 *
 	 * ## EXAMPLES
 	 *
@@ -260,55 +254,36 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *     Success: Unscheduled 2 events with hook 'cron_test'.
 	 */
 	public function unschedule( $args, $assoc_args ) {
+
+		list( $hook ) = $args;
+
 		if ( Utils\wp_version_compare( '4.9.0', '<' ) ) {
 			WP_CLI::error( 'Unscheduling events is only supported from WordPress 4.9.0 onwards.' );
 		}
 
-		$events = self::get_selected_cron_events( $args, $assoc_args );
+		$unscheduled = wp_unschedule_hook( $hook );
 
-		if ( is_wp_error( $events ) ) {
-			WP_CLI::error( $events );
-		}
+		if ( empty( $unscheduled ) ) {
+			$message = 'Failed to unschedule events for hook \'%1\$s.';
 
-		$unscheduled_events = 0;
-		$unscheduled_hooks  = 0;
-
-		foreach ( $events as $hook ) {
-			$unscheduled = wp_unschedule_hook( $hook );
-
-			if ( ! empty( $unscheduled ) ) {
-				$unscheduled_hooks += $unscheduled;
-				$unscheduled_events++;
-
-				WP_CLI::log(
-					sprintf(
-						'Unscheduled %1$d %2$s for hook \'%3$s\'',
-						$unscheduled_events,
-						Utils\pluralize( 'event', $unscheduled_events ),
-						$hook
-					)
-				);
-			} else {
-				$message = 'Failed to unschedule events for hook \'%1\$s\'';
-
-				// If 0 event found on hook.
-				if ( 0 === $unscheduled ) {
-					$message = 'No events found for hook \'%1\$s\'';
-				}
-
-				WP_CLI::warning( sprintf( $message, $hook ) );
+			// If 0 event found on hook.
+			if ( 0 === $unscheduled ) {
+				$message = "No events found for hook '%1\$s'.";
 			}
+
+			WP_CLI::error( sprintf( $message, $hook ) );
+
+		} else {
+			WP_CLI::success(
+				sprintf(
+					'Unscheduled %1$d %2$s for hook \'%3$s\'.',
+					$unscheduled,
+					Utils\pluralize( 'event', $unscheduled ),
+					$hook
+				)
+			);
 		}
 
-		\WP_CLI::success(
-			sprintf(
-				'Unscheduled %1$d %2$s for %3$d %1$s.',
-				$unscheduled_events,
-				Utils\pluralize( 'event', $unscheduled_events ),
-				$unscheduled_hooks,
-				Utils\pluralize( 'hook', $unscheduled_hooks )
-			)
-		);
 	}
 
 	/**
