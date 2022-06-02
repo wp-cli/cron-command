@@ -319,6 +319,33 @@ class Cron_Event_Command extends WP_CLI_Command {
 	}
 
 	/**
+	 * Executes an event immediately.
+	 *
+	 * @param stdClass $event The event
+	 * @return bool Whether the event was successfully executed or not.
+	 */
+	protected static function run_event( stdClass $event ) {
+
+		if ( ! defined( 'DOING_CRON' ) ) {
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Using native WordPress constant.
+			define( 'DOING_CRON', true );
+		}
+
+		if ( false !== $event->schedule ) {
+			$new_args = array( $event->time, $event->schedule, $event->hook, $event->args );
+			call_user_func_array( 'wp_reschedule_event', $new_args );
+		}
+
+		wp_unschedule_event( $event->time, $event->hook, $event->args );
+
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Can't prefix dynamic hooks here, calling registered hooks.
+		do_action_ref_array( $event->hook, $event->args );
+
+		return true;
+
+	}
+
+	/**
 	 * Deletes all scheduled cron events for the given hook.
 	 *
 	 * ## OPTIONS
@@ -378,33 +405,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 		} else {
 			WP_CLI::error( 'Could not delete any cron events.' );
 		}
-	}
-
-	/**
-	 * Executes an event immediately.
-	 *
-	 * @param stdClass $event The event
-	 * @return bool Whether the event was successfully executed or not.
-	 */
-	protected static function run_event( stdClass $event ) {
-
-		if ( ! defined( 'DOING_CRON' ) ) {
-			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Using native WordPress constant.
-			define( 'DOING_CRON', true );
-		}
-
-		if ( false !== $event->schedule ) {
-			$new_args = array( $event->time, $event->schedule, $event->hook, $event->args );
-			call_user_func_array( 'wp_reschedule_event', $new_args );
-		}
-
-		wp_unschedule_event( $event->time, $event->hook, $event->args );
-
-		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Can't prefix dynamic hooks here, calling registered hooks.
-		do_action_ref_array( $event->hook, $event->args );
-
-		return true;
-
 	}
 
 	/**
