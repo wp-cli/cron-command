@@ -92,13 +92,13 @@ wp cron event delete [<hook>...] [--due-now] [--all]
 **OPTIONS**
 
 	[<hook>...]
-		One or more hooks to run.
+		One or more hooks to delete.
 
 	[--due-now]
-		Run all hooks due right now.
+		Delete all hooks due right now.
 
 	[--all]
-		Run all hooks.
+		Delete all hooks.
 
 **EXAMPLES**
 
@@ -329,8 +329,14 @@ wp cron event unschedule <hook>
 
 **OPTIONS**
 
-	<hook>
-		Name of the hook for which all events should be unscheduled.
+	[<hook>...]
+		One or more hooks for which all events should be unscheduled.
+
+	[--due-now]
+		Unschedule all events for all hooks due right now.
+
+	[--all]
+		Unschedule all events for all hooks.
 
 **EXAMPLES**
 
