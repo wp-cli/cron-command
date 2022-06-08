@@ -322,12 +322,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 			}
 		}
 
-		if ( $deleted ) {
-			$message = ( 1 === $deleted ) ? 'Deleted a total of %d cron event.' : 'Deleted a total of %d cron events.';
-			WP_CLI::success( sprintf( $message, $deleted ) );
-		} else {
-			WP_CLI::error( 'Could not delete any cron events.' );
-		}
+		$message = ( 1 === $deleted ) ? 'Deleted a total of %d cron event.' : 'Deleted a total of %d cron events.';
+		WP_CLI::success( sprintf( $message, $deleted ) );
 	}
 
 	/**

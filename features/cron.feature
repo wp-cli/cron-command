@@ -365,7 +365,13 @@ Feature: Manage WP-Cron events and schedules
       | hook                   | recurrence    | args                           |
       | wp_cli_test_args_event | Non-repeating | {"foo":"banana","bar":"apple"} |
 
-Scenario: Delete all cron events
+Scenario: Delete multiple cron events
+    When I run `wp cron event schedule wp_cli_test_event_1 '+1 hour 5 minutes' hourly`
+    Then STDOUT should not be empty
+
+    When I run `wp cron event schedule wp_cli_test_event_2 '+1 hour 5 minutes' hourly`
+    Then STDOUT should not be empty
+
     When I try `wp cron event delete`
     Then STDERR should be:
       """
@@ -376,17 +382,39 @@ Scenario: Delete all cron events
     When I try `wp cron event delete --all`
     Then STDOUT should contain:
       """
-      Deleted the cron event 'wp_version_check'
+      Deleted the cron event 'wp_cli_test_event_1'
       """
     And STDOUT should contain:
       """
-      Deleted the cron event 'wp_update_plugins'
-      """
-    And STDOUT should contain:
-      """
-      Deleted the cron event 'wp_update_themes'
+      Deleted the cron event 'wp_cli_test_event_2'
       """
     And STDOUT should contain:
       """
       Success: Deleted a total of
+      """
+
+    When I run `wp cron event schedule wp_cli_test_event_1 now hourly`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_test_event_1'
+      """
+
+    When I run `wp cron event schedule wp_cli_test_event_2 '+1 hour 5 minutes' hourly`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_test_event_2'
+      """
+
+    When I run `wp cron event delete --due-now`
+    Then STDOUT should contain:
+      """
+      Deleted the cron event 'wp_cli_test_event_1'
+      """
+    And STDOUT should not contain:
+      """
+      Deleted the cron event 'wp_cli_test_event_2'
+      """
+    And STDOUT should contain:
+      """
+      Deleted a total of
       """
