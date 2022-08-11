@@ -2,7 +2,8 @@ Feature: Manage WP-Cron events and schedules
 
   Background:
     Given a WP install
-    And I run `wp config set DISABLE_WP_CRON false --raw --type=constant --anchor="if ( ! defined( 'DISABLE_WP_CRON' ) )"`
+    And I run `wp config set DISABLE_WP_CRON false --raw --type=constant --anchor='// ** MySQL settings - You can get this info from your web host ** //'`
+    And I run `wp eval "delete_transient( 'doing_cron' );"`
 
   Scenario: Scheduling and then deleting an event
     When I run `wp cron event schedule wp_cli_test_event_1 '+1 hour 5 minutes' --0=banana`
@@ -64,7 +65,7 @@ Feature: Manage WP-Cron events and schedules
       | hook                | recurrence    |
       | wp_cli_test_event_3 | Non-repeating |
 
-    When I try `wp cron event run wp_cli_test_event_3`
+    When I run `wp cron event run wp_cli_test_event_3`
     Then STDOUT should not be empty
 
     When I run `wp cron event list`
@@ -260,7 +261,7 @@ Feature: Manage WP-Cron events and schedules
       """
     And STDOUT should contain:
       """
-      Success: Executed a total of
+      Success: Executed
       """
 
   Scenario: Run currently scheduled events

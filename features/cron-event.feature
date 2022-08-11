@@ -2,6 +2,7 @@ Feature: Manage WP Cron events
 
   Background:
     Given a WP install
+    And I run `wp eval "delete_transient( 'doing_cron' );"`
 
   Scenario: --due-now with supplied events should only run those
     # WP throws a notice here for older versions of core.
