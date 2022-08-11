@@ -159,6 +159,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::warning( 'Numeric keys should be used for the hook arguments.' );
 		}
 
+		$hook       = $args[0];
+		$next_run   = Utils\get_flag_value( $args, 1, 'now' );
 		$recurrence = Utils\get_flag_value( $args, 2, false );
 
 		if ( empty( $next_run ) ) {
