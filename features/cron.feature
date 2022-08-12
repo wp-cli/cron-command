@@ -2,7 +2,7 @@ Feature: Manage WP-Cron events and schedules
 
   Background:
     Given a WP install
-    And I run `wp config set DISABLE_WP_CRON false --raw --type=constant --anchor='// ** MySQL settings - You can get this info from your web host ** //'`
+    And I run `wp config set DISABLE_WP_CRON false --raw --type=constant --anchor='// ** Database settings - You can get this info from your web host ** //'`
     And I run `wp eval "delete_transient( 'doing_cron' );"`
 
   Scenario: Scheduling and then deleting an event
