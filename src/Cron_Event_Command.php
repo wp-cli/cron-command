@@ -322,7 +322,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			}
 		}
 
-		$message = ( 1 === $deleted ) ? 'Deleted a total of %d cron event.' : 'Deleted a total of %d cron events.';
+		$message = sprintf( 'Deleted a total of %d %s', $deleted, Utils\pluralize( 'cron event', $deleted ) );
 		WP_CLI::success( sprintf( $message, $deleted ) );
 	}
 
