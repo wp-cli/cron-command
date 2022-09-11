@@ -419,14 +419,15 @@ Scenario: Delete multiple cron events
       Deleted a total of
       """
 
+Scenario: A valid combination of parameters should be present
     When I run `wp cron event delete --due-now --all`
-    Then STDOUT should contain:
+     Then STDERR should be:
       """
       Error: Please use either --due-now or --all
       """
 
     When I run `wp cron event delete wp_cli_test_event_1 --due-now`
-    Then STDOUT should contain:
+    Then STDERR should be:
       """
       Error: Please either specify cron events, or use --due-now/--all.
       """

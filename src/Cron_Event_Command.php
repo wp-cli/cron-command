@@ -307,7 +307,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *     Success: Deleted 2 instances of the cron event 'cron_test'.
 	 */
 	public function delete( $args, $assoc_args ) {
-		
 		$events = self::get_selected_cron_events( $args, $assoc_args );
 
 		if ( is_wp_error( $events ) ) {
