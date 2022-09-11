@@ -341,8 +341,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		}
 
 		if ( false !== $event->schedule ) {
-			$new_args = array( $event->time, $event->schedule, $event->hook, $event->args );
-			call_user_func_array( 'wp_reschedule_event', $new_args );
+			wp_reschedule_event( $event->time, $event->schedule, $event->hook, $event->args );
 		}
 
 		wp_unschedule_event( $event->time, $event->hook, $event->args );
