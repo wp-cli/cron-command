@@ -307,6 +307,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *     Success: Deleted 2 instances of the cron event 'cron_test'.
 	 */
 	public function delete( $args, $assoc_args ) {
+		
 		$events = self::get_selected_cron_events( $args, $assoc_args );
 
 		if ( is_wp_error( $events ) ) {
@@ -435,8 +436,19 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * @return array|WP_Error An array of objects, or a WP_Error object is there are no events scheduled.
 	 */
 	protected static function get_selected_cron_events( $args, $assoc_args ) {
-		if ( empty( $args ) && ! Utils\get_flag_value( $assoc_args, 'due-now' ) && ! Utils\get_flag_value( $assoc_args, 'all' ) ) {
+		$due_now = Utils\get_flag_value( $assoc_args, 'due-now' );
+		$all     = Utils\get_flag_value( $assoc_args, 'all' );
+
+		if ( empty( $args ) && ! $due_now && ! $all ) {
 			WP_CLI::error( 'Please specify one or more cron events, or use --due-now/--all.' );
+		}
+
+		if ( ! empty( $args ) && ( $due_now || $all ) ) {
+			WP_CLI::error( 'Please either specify cron events, or use --due-now/--all.' );
+		}
+
+		if ( $due_now && $all ) {
+			WP_CLI::error( 'Please use either --due-now or --all' );
 		}
 
 		$events = self::get_cron_events();
@@ -452,7 +464,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			}
 		}
 
-		if ( Utils\get_flag_value( $assoc_args, 'due-now' ) ) {
+		if ( $due_now ) {
 			$due_events = array();
 			foreach ( $events as $event ) {
 				if ( ! empty( $args ) && ! in_array( $event->hook, $args, true ) ) {
@@ -463,7 +475,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 				}
 			}
 			$events = $due_events;
-		} elseif ( ! Utils\get_flag_value( $assoc_args, 'all' ) ) {
+		} elseif ( ! $all ) {
 			$due_events = array();
 			foreach ( $events as $event ) {
 				if ( in_array( $event->hook, $args, true ) ) {

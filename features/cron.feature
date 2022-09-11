@@ -418,3 +418,15 @@ Scenario: Delete multiple cron events
       """
       Deleted a total of
       """
+
+    When I run `wp cron event delete --due-now --all`
+    Then STDOUT should contain:
+      """
+      Error: Please use either --due-now or --all
+      """
+
+    When I run `wp cron event delete wp_cli_test_event_1 --due-now`
+    Then STDOUT should contain:
+      """
+      Error: Please either specify cron events, or use --due-now/--all.
+      """
