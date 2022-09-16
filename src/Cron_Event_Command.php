@@ -322,7 +322,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			}
 		}
 
-		$message = sprintf( 'Deleted a total of %d %s', $deleted, Utils\pluralize( 'cron event', $deleted ) );
+		$message = sprintf( 'Deleted a total of %d %s.', $deleted, Utils\pluralize( 'cron event', $deleted ) );
 		WP_CLI::success( sprintf( $message, $deleted ) );
 	}
 
@@ -441,12 +441,12 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::error( 'Please specify one or more cron events, or use --due-now/--all.' );
 		}
 
-		if ( ! empty( $args ) && ( $due_now || $all ) ) {
-			WP_CLI::error( 'Please either specify cron events, or use --due-now/--all.' );
+		if ( ! empty( $args ) && $all ) {
+			WP_CLI::error( 'Please either specify cron events, or use --all.' );
 		}
 
 		if ( $due_now && $all ) {
-			WP_CLI::error( 'Please use either --due-now or --all' );
+			WP_CLI::error( 'Please use either --due-now or --all.' );
 		}
 
 		$events = self::get_cron_events();
@@ -468,7 +468,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 				if ( ! empty( $args ) && ! in_array( $event->hook, $args, true ) ) {
 					continue;
 				}
-				if ( time() >= $event->time ) {
+				if ( 'now' === $event->next_run_relative ) {
 					$due_events[] = $event;
 				}
 			}

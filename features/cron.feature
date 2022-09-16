@@ -399,10 +399,32 @@ Scenario: Delete multiple cron events
       Success: Scheduled event with hook 'wp_cli_test_event_1'
       """
 
+    When I run `wp cron event schedule wp_cli_test_event_2 now hourly`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_test_event_2'
+      """
+
     When I run `wp cron event schedule wp_cli_test_event_2 '+1 hour 5 minutes' hourly`
     Then STDOUT should contain:
       """
       Success: Scheduled event with hook 'wp_cli_test_event_2'
+      """
+
+    When I run `wp cron event delete wp_cli_test_event_2 --due-now`
+    Then STDOUT should contain:
+      """
+      Deleted the cron event 'wp_cli_test_event_2'
+      """
+    And STDOUT should contain:
+      """
+      Deleted a total of
+      """
+
+    When I run `wp cron event list --hook=wp_cli_test_event_2 --format=count`
+    Then STDOUT should be:
+      """
+      1
       """
 
     When I run `wp cron event delete --due-now`
@@ -420,14 +442,14 @@ Scenario: Delete multiple cron events
       """
 
 Scenario: A valid combination of parameters should be present
-    When I run `wp cron event delete --due-now --all`
+    When I try `wp cron event delete --due-now --all`
      Then STDERR should be:
       """
-      Error: Please use either --due-now or --all
+      Error: Please use either --due-now or --all.
       """
 
-    When I run `wp cron event delete wp_cli_test_event_1 --due-now`
+    When I try `wp cron event delete wp_cli_test_event_1 --all`
     Then STDERR should be:
       """
-      Error: Please either specify cron events, or use --due-now/--all.
+      Error: Please either specify cron events, or use --all.
       """
