@@ -225,7 +225,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::error( 'Please specify one or more cron events, or use --due-now/--all.' );
 		}
 
-		$events = self::get_cron_events();
+		$events = Utils\get_flag_value( $assoc_args, 'due-now' ) ? self::get_ready_cron_events() : self::get_cron_events();
 
 		if ( is_wp_error( $events ) ) {
 			WP_CLI::error( $events );
@@ -430,36 +430,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 */
 	protected static function get_cron_events() {
 
-		$crons  = _get_cron_array();
-		$events = array();
-
-		if ( empty( $crons ) ) {
-			return new WP_Error(
-				'no_events',
-				'You currently have no scheduled cron events.'
-			);
-		}
-
-		foreach ( $crons as $time => $hooks ) {
-			foreach ( $hooks as $hook => $hook_events ) {
-				foreach ( $hook_events as $sig => $data ) {
-
-					$events[] = (object) array(
-						'hook'     => $hook,
-						'time'     => $time,
-						'sig'      => $sig,
-						'args'     => $data['args'],
-						'schedule' => $data['schedule'],
-						'interval' => Utils\get_flag_value( $data, 'interval' ),
-					);
-
-				}
-			}
-		}
-
-		$events = array_map( 'Cron_Event_Command::format_event', $events );
-
-		return $events;
+		$crons = _get_cron_array();
+		return self::get_events_from_crons( $crons );
 
 	}
 
@@ -526,6 +498,54 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 	private function get_formatter( &$assoc_args ) {
 		return new \WP_CLI\Formatter( $assoc_args, $this->fields, 'event' );
+	}
+
+	/**
+	 * Get array from wp_get_ready_cron_jobs which allows pre_get_ready_cron_jobs filter.
+	 * @return array|WP_Error
+	 */
+	protected static function get_ready_cron_events() {
+		$crons = wp_get_ready_cron_jobs();
+		return self::get_events_from_crons( $crons );
+	}
+
+	/**
+	 * Fetch events from a cron array
+	 * @param $crons
+	 * @return array|WP_Error
+	 */
+	private static function get_events_from_crons( $crons ) {
+
+		$events = array();
+
+		if ( empty( $crons ) ) {
+			return new WP_Error(
+				'no_events',
+				'You currently have no scheduled cron events.'
+			);
+		}
+
+		foreach ( $crons as $time => $hooks ) {
+			foreach ( $hooks as $hook => $hook_events ) {
+				foreach ( $hook_events as $sig => $data ) {
+
+					$events[] = (object) array(
+						'hook'     => $hook,
+						'time'     => $time,
+						'sig'      => $sig,
+						'args'     => $data['args'],
+						'schedule' => $data['schedule'],
+						'interval' => Utils\get_flag_value( $data, 'interval' ),
+					);
+
+				}
+			}
+		}
+
+		$events = array_map( 'Cron_Event_Command::format_event', $events );
+
+		return $events;
+
 	}
 
 }
