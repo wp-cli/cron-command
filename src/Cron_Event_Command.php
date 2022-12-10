@@ -433,7 +433,12 @@ class Cron_Event_Command extends WP_CLI_Command {
 	protected static function get_cron_events( $is_due_now = false ) {
 
 		if ( $is_due_now ) {
-			$crons = wp_get_ready_cron_jobs();
+			// wp_get_ready_cron_jobs since 5.1.0
+			if ( version_compare( get_bloginfo( 'version' ), '5.1', '>=' ) ) {
+				$crons = wp_get_ready_cron_jobs();
+			} else {
+				$crons = _get_cron_array();
+			}
 		} else {
 			$crons = _get_cron_array();
 		}
