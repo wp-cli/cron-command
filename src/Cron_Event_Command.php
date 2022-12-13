@@ -225,7 +225,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::error( 'Please specify one or more cron events, or use --due-now/--all.' );
 		}
 
-		$events = self::get_cron_events();
+		$is_due_now = Utils\get_flag_value( $assoc_args, 'due-now' );
+
+		$events = self::get_cron_events( $is_due_now );
 
 		if ( is_wp_error( $events ) ) {
 			WP_CLI::error( $events );
@@ -428,12 +430,18 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *
 	 * @return array|WP_Error An array of event objects, or a WP_Error object if there are no events scheduled.
 	 */
-	protected static function get_cron_events() {
+	protected static function get_cron_events( $is_due_now = false ) {
 
-		$crons  = _get_cron_array();
+		// wp_get_ready_cron_jobs since 5.1.0
+		if ( $is_due_now && function_exists( 'wp_get_ready_cron_jobs' ) ) {
+			$crons = wp_get_ready_cron_jobs();
+		} else {
+			$crons = _get_cron_array();
+		}
+
 		$events = array();
 
-		if ( empty( $crons ) ) {
+		if ( empty( $crons ) && ! $is_due_now ) {
 			return new WP_Error(
 				'no_events',
 				'You currently have no scheduled cron events.'
