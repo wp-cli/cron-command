@@ -225,7 +225,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::error( 'Please specify one or more cron events, or use --due-now/--all.' );
 		}
 
-		$is_due_now = Utils\get_flag_value( $assoc_args, 'due-now' ) ? true : false;
+		$is_due_now = Utils\get_flag_value( $assoc_args, 'due-now' );
 
 		$events = self::get_cron_events( $is_due_now );
 
@@ -432,13 +432,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 */
 	protected static function get_cron_events( $is_due_now = false ) {
 
-		if ( $is_due_now ) {
-			// wp_get_ready_cron_jobs since 5.1.0
-			if ( version_compare( get_bloginfo( 'version' ), '5.1', '>=' ) ) {
-				$crons = wp_get_ready_cron_jobs();
-			} else {
-				$crons = _get_cron_array();
-			}
+		// wp_get_ready_cron_jobs since 5.1.0
+		if ( $is_due_now && function_exists( 'wp_get_ready_cron_jobs' ) ) {
+			$crons = wp_get_ready_cron_jobs();
 		} else {
 			$crons = _get_cron_array();
 		}
