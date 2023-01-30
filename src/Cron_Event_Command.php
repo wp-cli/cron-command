@@ -452,7 +452,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 			// Incorrectly registered cron events can produce a string key.
 			if ( is_string( $time ) ) {
-				WP_CLI::warning( sprintf( 'Ignoring invalid cron event ("%s").', $time ) );
+				WP_CLI::warning( sprintf( 'Ignoring incorrectly registered cron event "%s".', $time ) );
 				continue;
 			}
 

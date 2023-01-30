@@ -389,7 +389,7 @@ Feature: Manage WP-Cron events and schedules
       """
     And I run `wp eval-file update.php`
 
-    When I run `wp cron event list`
+    When I try `wp cron event list`
     Then STDOUT should contain:
       """
       postindexer_secondpass_cron
