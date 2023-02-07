@@ -360,3 +360,41 @@ Feature: Manage WP-Cron events and schedules
     Then STDOUT should be CSV containing:
       | hook                   | recurrence    | args                           |
       | wp_cli_test_args_event | Non-repeating | {"foo":"banana","bar":"apple"} |
+
+  Scenario: Warn when an invalid cron event is detected
+    Given a WP install
+    And a update.php file:
+      """
+      <?php
+      $val = array(
+        1647914509 => array(
+          'postindexer_secondpass_cron' => array(
+            '40cd750bba9870f18aada2478b24840a' => array(
+              'schedule' => '5mins',
+              'args' => array(),
+              'interval' => 100,
+            ),
+          ),
+        ),
+        'wp_batch_split_terms' => array(
+          1442323165 => array(
+            '40cd750bba9870f18aada2478b24840a' => array(
+              'schedule' => false,
+              'args' => array()
+            )
+          )
+        )
+      );
+      update_option( 'cron', $val );
+      """
+    And I run `wp eval-file update.php`
+
+    When I try `wp cron event list`
+    Then STDOUT should contain:
+      """
+      postindexer_secondpass_cron
+      """
+    And STDERR should contain:
+      """
+      Warning: Ignoring incorrectly registered cron event "wp_batch_split_terms".
+      """

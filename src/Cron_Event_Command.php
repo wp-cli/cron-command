@@ -449,6 +449,13 @@ class Cron_Event_Command extends WP_CLI_Command {
 		}
 
 		foreach ( $crons as $time => $hooks ) {
+
+			// Incorrectly registered cron events can produce a string key.
+			if ( is_string( $time ) ) {
+				WP_CLI::warning( sprintf( 'Ignoring incorrectly registered cron event "%s".', $time ) );
+				continue;
+			}
+
 			foreach ( $hooks as $hook => $hook_events ) {
 				foreach ( $hook_events as $sig => $data ) {
 
