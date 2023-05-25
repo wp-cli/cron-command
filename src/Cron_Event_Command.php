@@ -211,7 +211,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * : Run all hooks due right now.
 	 *
 	 * [--exclude=<hooks>]
-	 * : Comma-separated list of events to exclude.
+	 * : Comma-separated list of hooks to exclude.
 	 *
 	 * [--all]
 	 * : Run all hooks.
