@@ -210,6 +210,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * [--due-now]
 	 * : Run all hooks due right now.
 	 *
+	 * [--exclude=<hooks>]
+	 * : Comma-separated list of hooks to exclude.
+	 *
 	 * [--all]
 	 * : Run all hooks.
 	 *
@@ -231,6 +234,22 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		if ( is_wp_error( $events ) ) {
 			WP_CLI::error( $events );
+		}
+
+		$exclude = Utils\get_flag_value( $assoc_args, 'exclude' );
+
+		if ( ! empty( $exclude ) ) {
+			$exclude = explode( ',', $exclude );
+
+			$events = array_filter(
+				$events,
+				function ( $event ) use ( $args, $exclude ) {
+					if ( in_array( $event->hook, $exclude, true ) ) {
+						return false;
+					}
+					return true;
+				}
+			);
 		}
 
 		$hooks = wp_list_pluck( $events, 'hook' );

@@ -173,7 +173,7 @@ These fields are optionally available:
 Runs the next scheduled cron event for the given hook.
 
 ~~~
-wp cron event run [<hook>...] [--due-now] [--all]
+wp cron event run [<hook>...] [--due-now] [--exclude=<hooks>] [--all]
 ~~~
 
 **OPTIONS**
@@ -183,6 +183,9 @@ wp cron event run [<hook>...] [--due-now] [--all]
 
 	[--due-now]
 		Run all hooks due right now.
+
+	[--exclude=<hooks>]
+		Comma-separated list of hooks to exclude.
 
 	[--all]
 		Run all hooks.
