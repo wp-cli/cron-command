@@ -240,15 +240,17 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		if ( ! empty( $exclude ) ) {
 			$exclude = explode( ',', $exclude );
-		}
 
-		$events = array_filter(
-			$events,
-			function ( $event ) use ( $args, $exclude ) {
-				return ( empty( $args ) || in_array( $event->hook, $args, true ) ) &&
-					( empty( $exclude ) || ! in_array( $event->hook, $exclude, true ) );
-			}
-		);
+			$events = array_filter(
+				$events,
+				function ( $event ) use ( $args, $exclude ) {
+					if ( in_array( $event->hook, $exclude, true ) ) {
+						return false;
+					}
+					return true;
+				}
+			);
+		}
 
 		$hooks = wp_list_pluck( $events, 'hook' );
 		foreach ( $args as $hook ) {
