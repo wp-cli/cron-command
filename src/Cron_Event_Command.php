@@ -482,7 +482,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			}
 		}
 
-		// Remove all excluded hooks
+		// Remove all excluded hooks.
 		if ( ! empty( $exclude ) ) {
 			$exclude = explode( ',', $exclude );
 			$events  = array_filter(
@@ -494,7 +494,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		}
 
 		// If --due-now is specified, take only the events that have 'now' as
-		// their next_run_relative time
+		// their next_run_relative time.
 		if ( $due_now ) {
 			$due_events = array();
 			foreach ( $events as $event ) {
@@ -507,7 +507,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			}
 			$events = $due_events;
 		} elseif ( ! $all ) {
-			// IF --all is not specified, take only the events that have been
+			// If --all is not specified, take only the events that have been
 			// given as $args.
 			$due_events = array();
 			foreach ( $events as $event ) {
