@@ -37,7 +37,6 @@ Feature: Manage WP-Cron events and schedules
     When I run `wp cron event delete wp_cli_test_event_1`
     Then STDOUT should contain:
       """
-      Deleted the cron event 'wp_cli_test_event_1'
       Success: Deleted a total of 1 cron event.
       """
 
@@ -124,8 +123,6 @@ Feature: Manage WP-Cron events and schedules
     When I run `wp cron event delete wp_cli_test_event_5`
     Then STDOUT should be:
       """
-      Deleted the cron event 'wp_cli_test_event_5'
-      Deleted the cron event 'wp_cli_test_event_5'
       Success: Deleted a total of 2 cron events.
       """
 
@@ -177,7 +174,6 @@ Feature: Manage WP-Cron events and schedules
     When I run `wp cron event delete wp_cli_test_event_2`
     Then STDOUT should contain:
       """
-      Deleted the cron event 'wp_cli_test_event_2'
       Success: Deleted a total of 1 cron event.
       """
 
@@ -420,15 +416,17 @@ Feature: Manage WP-Cron events and schedules
     When I try `wp cron event delete --all`
     Then STDOUT should contain:
       """
-      Deleted the cron event 'wp_cli_test_event_1'
-      """
-    And STDOUT should contain:
-      """
-      Deleted the cron event 'wp_cli_test_event_2'
-      """
-    And STDOUT should contain:
-      """
       Success: Deleted a total of
+      """
+
+    When I try `wp cron event list`
+    Then STDOUT should not contain:
+      """
+      wp_cli_test_event_1
+      """
+    And STDOUT should not contain:
+      """
+      wp_cli_test_event_2
       """
 
     When I run `wp cron event schedule wp_cli_test_event_1 now hourly`
@@ -452,11 +450,13 @@ Feature: Manage WP-Cron events and schedules
     When I run `wp cron event delete wp_cli_test_event_2 --due-now`
     Then STDOUT should contain:
       """
-      Deleted the cron event 'wp_cli_test_event_2'
+      Deleted a total of 1 cron event
       """
-    And STDOUT should contain:
+
+    When I try `wp cron event list`
+    Then STDOUT should contain:
       """
-      Deleted a total of
+      wp_cli_test_event_2
       """
 
     When I run `wp cron event list --hook=wp_cli_test_event_2 --format=count`
@@ -468,15 +468,17 @@ Feature: Manage WP-Cron events and schedules
     When I run `wp cron event delete --due-now`
     Then STDOUT should contain:
       """
-      Deleted the cron event 'wp_cli_test_event_1'
+      Success: Deleted a total of
       """
-    And STDOUT should not contain:
+
+    When I try `wp cron event list`
+    Then STDOUT should not contain:
       """
-      Deleted the cron event 'wp_cli_test_event_2'
+      wp_cli_test_event_1
       """
     And STDOUT should contain:
       """
-      Deleted a total of
+      wp_cli_test_event_2
       """
 
     When I run `wp cron event schedule wp_cli_test_event_1 '+1 hour 5 minutes' hourly`
@@ -488,16 +490,22 @@ Feature: Manage WP-Cron events and schedules
     When I run `wp cron event delete --all --exclude=wp_cli_test_event_1`
     Then STDOUT should contain:
       """
-      Deleted the cron event 'wp_cli_test_event_2'
+      Success: Deleted a total of
+      """
+
+    When I try `wp cron event list`
+    Then STDOUT should not contain:
+      """
+      wp_cli_test_event_2
       """
     And STDOUT should contain:
       """
-      Deleted a total of
+      wp_cli_test_event_1
       """
 
   Scenario: A valid combination of parameters should be present
     When I try `wp cron event delete --due-now --all`
-      Then STDERR should be:
+    Then STDERR should be:
       """
       Error: Please use either --due-now or --all.
       """

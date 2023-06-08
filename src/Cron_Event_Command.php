@@ -325,7 +325,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 			$result = self::delete_event( $event );
 			if ( $result ) {
 				$deleted++;
-				WP_CLI::log( sprintf( "Deleted the cron event '%s'", $event->hook ) );
 			}
 		}
 
