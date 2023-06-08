@@ -479,6 +479,22 @@ Feature: Manage WP-Cron events and schedules
       Deleted a total of
       """
 
+    When I run `wp cron event schedule wp_cli_test_event_1 '+1 hour 5 minutes' hourly`
+    Then STDOUT should not be empty
+
+    When I run `wp cron event schedule wp_cli_test_event_2 '+1 hour 5 minutes' hourly`
+    Then STDOUT should not be empty
+
+    When I run `wp cron event delete --all --exclude=wp_cli_test_event_1`
+    Then STDOUT should contain:
+      """
+      Deleted the cron event 'wp_cli_test_event_2'
+      """
+    And STDOUT should contain:
+      """
+      Deleted a total of
+      """
+
   Scenario: A valid combination of parameters should be present
     When I try `wp cron event delete --due-now --all`
       Then STDERR should be:

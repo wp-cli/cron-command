@@ -230,22 +230,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::error( $events );
 		}
 
-		$exclude = Utils\get_flag_value( $assoc_args, 'exclude' );
-
-		if ( ! empty( $exclude ) ) {
-			$exclude = explode( ',', $exclude );
-
-			$events = array_filter(
-				$events,
-				function ( $event ) use ( $args, $exclude ) {
-					if ( in_array( $event->hook, $exclude, true ) ) {
-						return false;
-					}
-					return true;
-				}
-			);
-		}
-
 		$executed = 0;
 		foreach ( $events as $event ) {
 			$start  = microtime( true );
@@ -316,6 +300,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *
 	 * [--due-now]
 	 * : Delete all hooks due right now.
+	 *
+	 * [--exclude=<hooks>]
+	 * : Comma-separated list of hooks to exclude.
 	 *
 	 * [--all]
 	 * : Delete all hooks.
@@ -469,6 +456,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	protected static function get_selected_cron_events( $args, $assoc_args ) {
 		$due_now = Utils\get_flag_value( $assoc_args, 'due-now' );
 		$all     = Utils\get_flag_value( $assoc_args, 'all' );
+		$exclude = Utils\get_flag_value( $assoc_args, 'exclude' );
 
 		if ( empty( $args ) && ! $due_now && ! $all ) {
 			WP_CLI::error( 'Please specify one or more cron events, or use --due-now/--all.' );
@@ -495,6 +483,19 @@ class Cron_Event_Command extends WP_CLI_Command {
 			}
 		}
 
+		// Remove all excluded hooks
+		if ( ! empty( $exclude ) ) {
+			$exclude = explode( ',', $exclude );
+			$events  = array_filter(
+				$events,
+				function ( $event ) use ( $exclude ) {
+					return ! in_array( $event->hook, $exclude, true );
+				}
+			);
+		}
+
+		// If --due-now is specified, take only the events that have 'now' as
+		// their next_run_relative time
 		if ( $due_now ) {
 			$due_events = array();
 			foreach ( $events as $event ) {
@@ -507,6 +508,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 			}
 			$events = $due_events;
 		} elseif ( ! $all ) {
+			// IF --all is not specified, take only the events that have been
+			// given as $args.
 			$due_events = array();
 			foreach ( $events as $event ) {
 				if ( in_array( $event->hook, $args, true ) ) {
