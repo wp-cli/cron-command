@@ -135,7 +135,7 @@ Feature: Manage WP-Cron events and schedules
     When I try `wp cron event delete wp_cli_test_event_5`
     Then STDERR should be:
       """
-      Error: Invalid cron event 'wp_cli_test_event_5'.
+      Error: Invalid cron event 'wp_cli_test_event_5'
       """
 
   Scenario: Scheduling and then running a re-occurring event
