@@ -137,6 +137,40 @@ Feature: Manage WP-Cron events and schedules
       """
       Error: Invalid cron event 'wp_cli_test_event_5'.
       """
+  Scenario: Cron event with missing recurrence should be non-repeating.
+    Given a wp-content/mu-plugins/schedule.php file:
+      """
+      <?php
+      add_filter(
+        'cron_schedules',
+        function( $schedules ) {
+          $schedules['test_schedule'] = array(
+            'interval' => 3600,
+            'display'  => __( 'Every Hour' ),
+          );
+          return $schedules;
+        }
+      );
+      """
+
+    When I run `wp cron event schedule wp_cli_test_event "1 hour" test_schedule`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_test_event'
+      """
+
+    When I run `wp cron event list --hook=wp_cli_test_event --fields=hook,recurrence`
+    Then STDOUT should be a table containing rows:
+      | hook               | recurrence    |
+      | wp_cli_test_event  | 1 hour        |
+
+    When I run `rm wp-content/mu-plugins/schedule.php`
+    Then the return code should be 0
+
+    When I run `wp cron event list --hook=wp_cli_test_event --fields=hook,recurrence`
+    Then STDOUT should be a table containing rows:
+      | hook               | recurrence    |
+      | wp_cli_test_event  | Non-repeating |
 
   Scenario: Scheduling and then running a re-occurring event
     When I run `wp cron event schedule wp_cli_test_event_4 now hourly`
