@@ -120,7 +120,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 		} else {
 			$formatter->display_items( $events );
 		}
-
 	}
 
 	/**
@@ -196,7 +195,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 		} else {
 			WP_CLI::error( 'Event not scheduled.' );
 		}
-
 	}
 
 	/**
@@ -285,7 +283,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			$start  = microtime( true );
 			$result = self::run_event( $event );
 			$total  = round( microtime( true ) - $start, 3 );
-			$executed++;
+			++$executed;
 			WP_CLI::log( sprintf( "Executed the cron event '%s' in %ss.", $event->hook, $total ) );
 		}
 
@@ -337,7 +335,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 				)
 			);
 		}
-
 	}
 
 	/**
@@ -364,7 +361,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 		do_action_ref_array( $event->hook, $event->args );
 
 		return true;
-
 	}
 
 	/**
@@ -395,7 +391,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			if ( $event->hook === $hook ) {
 				$result = self::delete_event( $event );
 				if ( $result ) {
-					$deleted++;
+					++$deleted;
 				} else {
 					WP_CLI::warning( sprintf( "Failed to the delete the cron event '%s'.", $hook ) );
 				}
@@ -408,7 +404,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 		} else {
 			WP_CLI::error( sprintf( "Invalid cron event '%s'.", $hook ) );
 		}
-
 	}
 
 	/**
@@ -495,7 +490,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 		$events = array_map( 'Cron_Event_Command::format_event', $events );
 
 		return $events;
-
 	}
 
 	/**
@@ -562,5 +556,4 @@ class Cron_Event_Command extends WP_CLI_Command {
 	private function get_formatter( &$assoc_args ) {
 		return new \WP_CLI\Formatter( $assoc_args, $this->fields, 'event' );
 	}
-
 }

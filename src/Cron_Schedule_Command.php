@@ -84,7 +84,6 @@ class Cron_Schedule_Command extends WP_CLI_Command {
 		} else {
 			$formatter->display_items( $schedules );
 		}
-
 	}
 
 	/**
@@ -124,5 +123,4 @@ class Cron_Schedule_Command extends WP_CLI_Command {
 	private function get_formatter( &$assoc_args ) {
 		return new \WP_CLI\Formatter( $assoc_args, $this->fields, 'schedule' );
 	}
-
 }
