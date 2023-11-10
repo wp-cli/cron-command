@@ -323,7 +323,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			if ( $result ) {
 				++$deleted;
 			} else {
-				WP_CLI::warning( sprintf( "Failed to the delete the cron event '%s'.", $hook ) );
+				WP_CLI::warning( sprintf( "Failed to the delete the cron event '%s'.", $event->hook ) );
 			}
 		}
 
