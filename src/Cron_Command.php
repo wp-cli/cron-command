@@ -52,7 +52,6 @@ class Cron_Command extends WP_CLI_Command {
 		} else {
 			WP_CLI::error( sprintf( 'WP-Cron spawn returned HTTP status code: %1$s %2$s', $code, $message ) );
 		}
-
 	}
 
 	/**
@@ -89,7 +88,5 @@ class Cron_Command extends WP_CLI_Command {
 		$result = wp_remote_post( $cron_request['url'], $cron_request['args'] );
 
 		return $result;
-
 	}
-
 }

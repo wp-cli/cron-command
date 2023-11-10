@@ -120,7 +120,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 		} else {
 			$formatter->display_items( $events );
 		}
-
 	}
 
 	/**
@@ -196,7 +195,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 		} else {
 			WP_CLI::error( 'Event not scheduled.' );
 		}
-
 	}
 
 	/**
@@ -235,7 +233,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			$start  = microtime( true );
 			$result = self::run_event( $event );
 			$total  = round( microtime( true ) - $start, 3 );
-			$executed++;
+			++$executed;
 			WP_CLI::log( sprintf( "Executed the cron event '%s' in %ss.", $event->hook, $total ) );
 		}
 
@@ -287,7 +285,32 @@ class Cron_Event_Command extends WP_CLI_Command {
 				)
 			);
 		}
+	}
 
+	/**
+	 * Executes an event immediately.
+	 *
+	 * @param stdClass $event The event
+	 * @return bool Whether the event was successfully executed or not.
+	 */
+	protected static function run_event( stdClass $event ) {
+
+		if ( ! defined( 'DOING_CRON' ) ) {
+			// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound -- Using native WordPress constant.
+			define( 'DOING_CRON', true );
+		}
+
+		if ( false !== $event->schedule ) {
+			$new_args = array( $event->time, $event->schedule, $event->hook, $event->args );
+			call_user_func_array( 'wp_reschedule_event', $new_args );
+		}
+
+		wp_unschedule_event( $event->time, $event->hook, $event->args );
+
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound -- Can't prefix dynamic hooks here, calling registered hooks.
+		do_action_ref_array( $event->hook, $event->args );
+
+		return true;
 	}
 
 	/**
@@ -322,9 +345,13 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		$deleted = 0;
 		foreach ( $events as $event ) {
-			$result = self::delete_event( $event );
-			if ( $result ) {
-				$deleted++;
+			if ( $event->hook === $hook ) {
+				$result = self::delete_event( $event );
+				if ( $result ) {
+					++$deleted;
+				} else {
+					WP_CLI::warning( sprintf( "Failed to the delete the cron event '%s'.", $hook ) );
+				}
 			}
 		}
 
@@ -355,7 +382,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 		do_action_ref_array( $event->hook, $event->args );
 
 		return true;
-
 	}
 
 	/**
@@ -383,10 +409,11 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 */
 	protected static function format_event( stdClass $event ) {
 
+		$schedules                = wp_get_schedules();
+		$event->recurrence        = ( isset( $schedules[ $event->schedule ] ) ) ? self::interval( $event->interval ) : 'Non-repeating';
 		$event->next_run          = get_date_from_gmt( date( 'Y-m-d H:i:s', $event->time ), self::$time_format ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 		$event->next_run_gmt      = date( self::$time_format, $event->time ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 		$event->next_run_relative = self::interval( $event->time - time() );
-		$event->recurrence        = ( $event->schedule ) ? self::interval( $event->interval ) : 'Non-repeating';
 
 		return $event;
 	}
@@ -441,7 +468,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 		$events = array_map( 'Cron_Event_Command::format_event', $events );
 
 		return $events;
-
 	}
 
 	/**
@@ -585,5 +611,4 @@ class Cron_Event_Command extends WP_CLI_Command {
 	private function get_formatter( &$assoc_args ) {
 		return new \WP_CLI\Formatter( $assoc_args, $this->fields, 'event' );
 	}
-
 }
