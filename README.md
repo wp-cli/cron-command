@@ -86,7 +86,7 @@ wp cron event
 Deletes all scheduled cron events for the given hook.
 
 ~~~
-wp cron event delete [<hook>...] [--due-now] [--all]
+wp cron event delete [<hook>...] [--due-now] [--exclude=<hooks>] [--all]
 ~~~
 
 **OPTIONS**
@@ -96,6 +96,9 @@ wp cron event delete [<hook>...] [--due-now] [--all]
 
 	[--due-now]
 		Delete all hooks due right now.
+
+	[--exclude=<hooks>]
+		Comma-separated list of hooks to exclude.
 
 	[--all]
 		Delete all hooks.
