@@ -67,11 +67,13 @@ wp cron event
 
     # Run all cron events due right now
     $ wp cron event run --due-now
+    Executed the cron event 'cron_test_1' in 0.01s.
+    Executed the cron event 'cron_test_2' in 0.006s.
     Success: Executed a total of 2 cron events.
 
     # Delete all scheduled cron events for the given hook
     $ wp cron event delete cron_test
-    Success: Deleted 2 instances of the cron event 'cron_test'.
+    Success: Deleted a total of 2 cron events.
 
     # List scheduled cron events in JSON
     $ wp cron event list --fields=hook,next_run --format=json
@@ -107,7 +109,7 @@ wp cron event delete [<hook>...] [--due-now] [--exclude=<hooks>] [--all]
 
     # Delete all scheduled cron events for the given hook
     $ wp cron event delete cron_test
-    Success: Deleted 2 instances of the cron event 'cron_test'.
+    Success: Deleted a total of 2 cron events.
 
 
 
@@ -203,6 +205,8 @@ wp cron event run [<hook>...] [--due-now] [--exclude=<hooks>] [--all]
 
     # Run all cron events due right now
     $ wp cron event run --due-now
+    Executed the cron event 'cron_test_1' in 0.01s.
+    Executed the cron event 'cron_test_2' in 0.006s.
     Success: Executed a total of 2 cron events.
 
 
@@ -342,7 +346,7 @@ wp cron event unschedule <hook>
 
     # Unschedule a cron event on given hook.
     $ wp cron event unschedule cron_test
-    Success: Unscheduled 2 events with hook 'cron_test'.
+    Success: Unscheduled 2 events for hook 'cron_test'.
 
 ## Installing
 
