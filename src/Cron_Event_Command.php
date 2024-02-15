@@ -13,11 +13,13 @@ use WP_CLI\Utils;
  *
  *     # Run all cron events due right now
  *     $ wp cron event run --due-now
+ *     Executed the cron event 'cron_test_1' in 0.01s.
+ *     Executed the cron event 'cron_test_2' in 0.006s.
  *     Success: Executed a total of 2 cron events.
  *
  *     # Delete all scheduled cron events for the given hook
  *     $ wp cron event delete cron_test
- *     Success: Deleted 2 instances of the cron event 'cron_test'.
+ *     Success: Deleted a total of 2 cron events.
  *
  *     # List scheduled cron events in JSON
  *     $ wp cron event list --fields=hook,next_run --format=json
@@ -218,6 +220,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *
 	 *     # Run all cron events due right now
 	 *     $ wp cron event run --due-now
+	 *     Executed the cron event 'cron_test_1' in 0.01s.
+	 *     Executed the cron event 'cron_test_2' in 0.006s.
 	 *     Success: Executed a total of 2 cron events.
 	 */
 	public function run( $args, $assoc_args ) {
@@ -253,7 +257,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *
 	 *     # Unschedule a cron event on given hook.
 	 *     $ wp cron event unschedule cron_test
-	 *     Success: Unscheduled 2 events with hook 'cron_test'.
+	 *     Success: Unscheduled 2 events for hook 'cron_test'.
 	 */
 	public function unschedule( $args, $assoc_args ) {
 
@@ -308,7 +312,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *
 	 *     # Delete all scheduled cron events for the given hook
 	 *     $ wp cron event delete cron_test
-	 *     Success: Deleted 2 instances of the cron event 'cron_test'.
+	 *     Success: Deleted a total of 2 cron events.
 	 */
 	public function delete( $args, $assoc_args ) {
 		$events = self::get_selected_cron_events( $args, $assoc_args );
