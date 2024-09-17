@@ -102,7 +102,7 @@ Feature: Manage WP Cron events
       """
 
     When I run `wp cron event schedule mycron now`
-    And I run `wp cron event run --due-now`
+    And I try `wp cron event run --due-now`
     Then STDOUT should contain:
       """
       MY SHUTDOWN FUNCTION
@@ -129,7 +129,7 @@ Feature: Manage WP Cron events
     And I try `wp cron event run --due-now`
     Then STDERR should contain:
       """
-       Fatal error: Uncaught Error: Call to undefined function breakthings()
+      Fatal error: Uncaught Error: Call to undefined function breakthings()
       """
     Then the {RUN_DIR}/server.log file should exist
     And the {RUN_DIR}/server.log file should contain:
