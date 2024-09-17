@@ -123,10 +123,9 @@ Feature: Manage WP Cron events
       """
 
     And I run `wp config set WP_DEBUG true --raw`
-    And I run `wp config set WP_DEBUG_DISPLAY false --raw`
     And I run `wp config set WP_DEBUG_LOG '{RUN_DIR}/server.log'`
 
-    When I run `wp cron event schedule mycronlog now`
+    When I try `wp cron event schedule mycronlog now`
     And I try `wp cron event run --due-now`
     Then STDERR should contain:
       """
