@@ -123,13 +123,14 @@ Feature: Manage WP Cron events
       """
 
     And I run `wp config set WP_DEBUG true --raw`
+    And I run `wp config set WP_DEBUG_DISPLAY false --raw`
     And I run `wp config set WP_DEBUG_LOG '{RUN_DIR}/server.log'`
 
     When I run `wp cron event schedule mycronlog now`
     And I try `wp cron event run --due-now`
     Then STDERR should contain:
       """
-      Fatal error: Uncaught Error: Call to undefined function breakthings()
+      Call to undefined function breakthings()
       """
     Then the {RUN_DIR}/server.log file should exist
     And the {RUN_DIR}/server.log file should contain:
