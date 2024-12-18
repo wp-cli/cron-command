@@ -118,7 +118,6 @@ Feature: Manage WP Cron events
 
       register_shutdown_function(function() {
         error_log('LOG A SHUTDOWN FROM ERROR');
-        // file_put_contents( dirname( __FILE__ ) . '/log.log', print_r( 'Shutdown called correctly', true ) . "\r\n\r\n", FILE_APPEND );
       });
       """
 
