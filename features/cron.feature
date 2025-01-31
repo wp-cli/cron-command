@@ -255,12 +255,13 @@ Feature: Manage WP-Cron events and schedules
       """
       Error:
       """
-    When I run `cat {RUN_DIR}/server.log`
-    Then STDOUT should contain:
-    """
-    foo
-    """
-    And the {RUN_DIR}/server.log file should not exist
+
+    # Normally we would simply check for the log file to not exist. However, when running with Xdebug for code coverage purposes,
+    # the following warning might be added to the log file:
+    # PHP Warning: JIT is incompatible with third party extensions that override zend_execute_ex(). JIT disabled. in Unknown on line 0
+    # This workaround checks for any other possible entries in the log file.
+    When I run `awk '!/JIT/' {RUN_DIR}/server.log 2>/dev/null`
+    Then STDOUT should be empty
 
   Scenario: Run multiple cron events
     When I try `wp cron event run`
