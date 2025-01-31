@@ -255,6 +255,11 @@ Feature: Manage WP-Cron events and schedules
       """
       Error:
       """
+    When I run `cat {RUN_DIR}/server.log`
+    Then STDOUT should contain:
+    """
+    foo
+    """
     And the {RUN_DIR}/server.log file should not exist
 
   Scenario: Run multiple cron events
