@@ -260,7 +260,7 @@ Feature: Manage WP-Cron events and schedules
     # the following warning might be added to the log file:
     # PHP Warning: JIT is incompatible with third party extensions that override zend_execute_ex(). JIT disabled. in Unknown on line 0
     # This workaround checks for any other possible entries in the log file.
-    When I run `awk '!/JIT/' {RUN_DIR}/server.log 2>/dev/null`
+    When I run `awk '!/JIT/' {RUN_DIR}/server.log 2>/dev/null || echo ""`
     Then STDOUT should be empty
 
   Scenario: Run multiple cron events
