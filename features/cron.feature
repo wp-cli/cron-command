@@ -303,6 +303,9 @@ Feature: Manage WP-Cron events and schedules
       Success: Executed a total of
       """
 
+  # Fails on WordPress 4.9 because `wp cron event run --due-now`
+  # executes the "wp_privacy_delete_old_export_files" event there.
+  @require-wp-5.0
   Scenario: Run currently scheduled events
     # WP throws a notice here for older versions of core.
     When I try `wp cron event run --all`

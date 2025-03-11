@@ -3,6 +3,9 @@ Feature: Manage WP Cron events
   Background:
     Given a WP install
 
+  # Fails on WordPress 4.9 because `wp cron event run --due-now`
+  # executes the "wp_privacy_delete_old_export_files" event there.
+  @require-wp-5.0
   Scenario: --due-now with supplied events should only run those
     # WP throws a notice here for older versions of core.
     When I try `wp cron event run --all`
