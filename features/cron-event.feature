@@ -133,7 +133,7 @@ Feature: Manage WP Cron events
       """
       Call to undefined function breakthings()
       """
-    Then the {RUN_DIR}/server.log file should exist
+    And the {RUN_DIR}/server.log file should exist
     And the {RUN_DIR}/server.log file should contain:
       """
       LOG A SHUTDOWN FROM ERROR
