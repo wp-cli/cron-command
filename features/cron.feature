@@ -75,7 +75,7 @@ Feature: Manage WP-Cron events and schedules
 
   Scenario: Scheduling, running, and deleting duplicate events
     When I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --0=banana`
-    When I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --0=bar`
+    And I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --0=bar`
     Then STDOUT should not be empty
 
     When I run `wp cron event list --format=csv --fields=hook,recurrence,args`
@@ -111,7 +111,7 @@ Feature: Manage WP-Cron events and schedules
       """
 
     When I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --0=banana`
-    When I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --0=bar`
+    And I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --0=bar`
     Then STDOUT should not be empty
 
     When I run `wp cron event list`
