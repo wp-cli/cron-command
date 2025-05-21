@@ -16,7 +16,9 @@
  *     +------------+-------------+----------+
  */
 class Cron_Schedule_Command extends WP_CLI_Command {
-
+	/**
+	 * @var string[]
+	 */
 	private $fields = array(
 		'name',
 		'display',

@@ -28,7 +28,9 @@ use WP_CLI\Utils;
  * @package wp-cli
  */
 class Cron_Event_Command extends WP_CLI_Command {
-
+	/**
+	 * @var string[]
+	 */
 	private $fields = array(
 		'hook',
 		'next_run_gmt',
@@ -36,6 +38,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 		'recurrence',
 	);
 
+	/**
+	 * @var string
+	 */
 	private static $time_format = 'Y-m-d H:i:s';
 
 	/**
@@ -160,8 +165,16 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::warning( 'Numeric keys should be used for the hook arguments.' );
 		}
 
-		$hook       = $args[0];
-		$next_run   = Utils\get_flag_value( $args, 1, 'now' );
+		$hook = $args[0];
+
+		/**
+		 * @var string $next_run
+		 */
+		$next_run = Utils\get_flag_value( $args, 1, 'now' );
+
+		/**
+		 * @var string|false $recurrence
+		 */
 		$recurrence = Utils\get_flag_value( $args, 2, false );
 
 		if ( empty( $next_run ) ) {
@@ -262,10 +275,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 	public function unschedule( $args, $assoc_args ) {
 
 		list( $hook ) = $args;
-
-		if ( Utils\wp_version_compare( '4.9.0', '<' ) ) {
-			WP_CLI::error( 'Unscheduling events is only supported from WordPress 4.9.0 onwards.' );
-		}
 
 		$unscheduled = wp_unschedule_hook( $hook );
 
@@ -455,8 +464,12 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * @return array|WP_Error An array of objects, or a WP_Error object is there are no events scheduled.
 	 */
 	protected static function get_selected_cron_events( $args, $assoc_args ) {
-		$due_now = Utils\get_flag_value( $assoc_args, 'due-now' );
-		$all     = Utils\get_flag_value( $assoc_args, 'all' );
+		$due_now = (bool) Utils\get_flag_value( $assoc_args, 'due-now' );
+		$all     = (bool) Utils\get_flag_value( $assoc_args, 'all' );
+
+		/**
+		 * @var string $exclude
+		 */
 		$exclude = Utils\get_flag_value( $assoc_args, 'exclude' );
 
 		if ( empty( $args ) && ! $due_now && ! $all ) {
@@ -548,6 +561,10 @@ class Cron_Event_Command extends WP_CLI_Command {
 			array( 60, 'minute' ),
 			array( 1, 'second' ),
 		);
+
+		$name    = 'second';
+		$count   = 0;
+		$seconds = 1;
 
 		// we only want to output two chunks of time here, eg:
 		// x years, xx months
