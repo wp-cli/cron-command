@@ -81,14 +81,6 @@ Feature: Manage WP Cron events
       Error: No events found for hook 'wp_cli_test_event'.
       """
 
-  @less-than-wp-4.9.0
-  Scenario: Unschedule cron event for WP < 4.9.0, wp_unschedule_hook was not included
-    When I try `wp cron event unschedule wp_cli_test_event_1`
-    Then STDERR should be:
-      """
-      Error: Unscheduling events is only supported from WordPress 4.9.0 onwards.
-      """
-
   Scenario: Run cron event with a registered shutdown function
     Given a wp-content/mu-plugins/setup_shutdown_function.php file:
       """
