@@ -167,14 +167,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		$hook = $args[0];
 
-		/**
-		 * @var string $next_run
-		 */
-		$next_run = Utils\get_flag_value( $args, 1, 'now' );
-
-		/**
-		 * @var string|false $recurrence
-		 */
+		$next_run   = Utils\get_flag_value( $args, 1, 'now' );
 		$recurrence = Utils\get_flag_value( $args, 2, false );
 
 		if ( empty( $next_run ) ) {
@@ -464,8 +457,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * @return array|WP_Error An array of objects, or a WP_Error object is there are no events scheduled.
 	 */
 	protected static function get_selected_cron_events( $args, $assoc_args ) {
-		$due_now = (bool) Utils\get_flag_value( $assoc_args, 'due-now' );
-		$all     = (bool) Utils\get_flag_value( $assoc_args, 'all' );
+		$due_now = Utils\get_flag_value( $assoc_args, 'due-now' );
+		$all     = Utils\get_flag_value( $assoc_args, 'all' );
 
 		/**
 		 * @var string $exclude
@@ -570,6 +563,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 		// x years, xx months
 		// x days, xx hours
 		// so there's only two bits of calculation below:
+
+		$i = 0;
+		$j = 0;
 
 		// step one: the first chunk
 		for ( $i = 0, $j = count( $chunks ); $i < $j; $i++ ) {
