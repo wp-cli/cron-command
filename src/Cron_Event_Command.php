@@ -159,6 +159,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *     # Schedule new cron event and pass arguments
 	 *     $ wp cron event schedule cron_test '+1 hour' --0=first-argument --1=second-argument
 	 *     Success: Scheduled event with hook 'cron_test' for 2016-05-31 11:21:35 GMT.
+	 *
+	 * @param array{0: string, 1?: string, 2?: string} $args Positional arguments.
+	 * @param array<int, string> $assoc_args Associative arguments.
 	 */
 	public function schedule( $args, $assoc_args ) {
 		if ( count( $assoc_args ) && count( array_filter( array_keys( $assoc_args ), 'is_string' ) ) ) {
