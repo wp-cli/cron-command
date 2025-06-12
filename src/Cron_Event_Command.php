@@ -28,7 +28,9 @@ use WP_CLI\Utils;
  * @package wp-cli
  */
 class Cron_Event_Command extends WP_CLI_Command {
-
+	/**
+	 * @var string[]
+	 */
 	private $fields = array(
 		'hook',
 		'next_run_gmt',
@@ -36,6 +38,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 		'recurrence',
 	);
 
+	/**
+	 * @var string
+	 */
 	private static $time_format = 'Y-m-d H:i:s';
 
 	/**
@@ -154,13 +159,17 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *     # Schedule new cron event and pass arguments
 	 *     $ wp cron event schedule cron_test '+1 hour' --0=first-argument --1=second-argument
 	 *     Success: Scheduled event with hook 'cron_test' for 2016-05-31 11:21:35 GMT.
+	 *
+	 * @param array{0: string, 1?: string, 2?: string} $args Positional arguments.
+	 * @param array<int, string> $assoc_args Associative arguments.
 	 */
 	public function schedule( $args, $assoc_args ) {
 		if ( count( $assoc_args ) && count( array_filter( array_keys( $assoc_args ), 'is_string' ) ) ) {
 			WP_CLI::warning( 'Numeric keys should be used for the hook arguments.' );
 		}
 
-		$hook       = $args[0];
+		$hook = $args[0];
+
 		$next_run   = Utils\get_flag_value( $args, 1, 'now' );
 		$recurrence = Utils\get_flag_value( $args, 2, false );
 
@@ -262,10 +271,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 	public function unschedule( $args, $assoc_args ) {
 
 		list( $hook ) = $args;
-
-		if ( Utils\wp_version_compare( '4.9.0', '<' ) ) {
-			WP_CLI::error( 'Unscheduling events is only supported from WordPress 4.9.0 onwards.' );
-		}
 
 		$unscheduled = wp_unschedule_hook( $hook );
 
@@ -457,6 +462,10 @@ class Cron_Event_Command extends WP_CLI_Command {
 	protected static function get_selected_cron_events( $args, $assoc_args ) {
 		$due_now = Utils\get_flag_value( $assoc_args, 'due-now' );
 		$all     = Utils\get_flag_value( $assoc_args, 'all' );
+
+		/**
+		 * @var string $exclude
+		 */
 		$exclude = Utils\get_flag_value( $assoc_args, 'exclude' );
 
 		if ( empty( $args ) && ! $due_now && ! $all ) {
@@ -549,10 +558,17 @@ class Cron_Event_Command extends WP_CLI_Command {
 			array( 1, 'second' ),
 		);
 
+		$name    = 'second';
+		$count   = 0;
+		$seconds = 1;
+
 		// we only want to output two chunks of time here, eg:
 		// x years, xx months
 		// x days, xx hours
 		// so there's only two bits of calculation below:
+
+		$i = 0;
+		$j = 0;
 
 		// step one: the first chunk
 		for ( $i = 0, $j = count( $chunks ); $i < $j; $i++ ) {

@@ -65,7 +65,6 @@ class Cron_Command extends WP_CLI_Command {
 	 */
 	protected static function get_cron_spawn() {
 
-		$sslverify     = \WP_CLI\Utils\wp_version_compare( 4.0, '<' );
 		$doing_wp_cron = sprintf( '%.22F', microtime( true ) );
 
 		$cron_request_array = array(
@@ -75,7 +74,7 @@ class Cron_Command extends WP_CLI_Command {
 				'timeout'   => 3,
 				'blocking'  => true,
 				// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- Calling native WordPress hook.
-				'sslverify' => apply_filters( 'https_local_ssl_verify', $sslverify ),
+				'sslverify' => apply_filters( 'https_local_ssl_verify', false ),
 			),
 		);
 
