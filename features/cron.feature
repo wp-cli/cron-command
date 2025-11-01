@@ -378,6 +378,16 @@ Feature: Manage WP-Cron events and schedules
       https://example.com
       """
 
+    When I run `wp cron test`
+    Then STDOUT should contain:
+      """
+      Success: WP-Cron spawning is working as expected.
+      """
+    And STDERR should contain:
+      """
+      Warning: The ALTERNATE_WP_CRON constant is set to true. WP-Cron spawning is not asynchronous.
+      """
+
   Scenario: Listing duplicated cron events
     When I run `wp cron event schedule wp_cli_test_event_1 '+1 hour 5 minutes' hourly`
     Then STDOUT should not be empty
