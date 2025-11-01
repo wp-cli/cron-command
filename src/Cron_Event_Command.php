@@ -248,6 +248,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 			$total  = round( microtime( true ) - $start, 3 );
 			++$executed;
 			WP_CLI::log( sprintf( "Executed the cron event '%s' in %ss.", $event->hook, $total ) );
+			if ( ! empty( $event->args ) ) {
+				WP_CLI::debug( sprintf( "Arguments: %s", wp_json_encode( $event->args ) ), 'cron' );
+			}
 		}
 
 		$message = ( 1 === $executed ) ? 'Executed a total of %d cron event.' : 'Executed a total of %d cron events.';

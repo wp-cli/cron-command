@@ -130,3 +130,31 @@ Feature: Manage WP Cron events
       """
       LOG A SHUTDOWN FROM ERROR
       """
+
+  Scenario: Run cron event with arguments and debug output
+    When I run `wp cron event schedule wp_cli_test_event_with_args now --0=123 --1=test-value`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_test_event_with_args'
+      """
+
+    When I run `wp cron event run wp_cli_test_event_with_args --due-now --debug=cron`
+    Then STDOUT should contain:
+      """
+      Executed the cron event 'wp_cli_test_event_with_args'
+      """
+    And STDOUT should contain:
+      """
+      Debug (cron): Arguments: ["123","test-value"]
+      """
+
+    When I run `wp cron event schedule wp_cli_test_event_no_args now`
+    And I run `wp cron event run wp_cli_test_event_no_args --due-now --debug=cron`
+    Then STDOUT should contain:
+      """
+      Executed the cron event 'wp_cli_test_event_no_args'
+      """
+    And STDOUT should not contain:
+      """
+      Debug (cron): Arguments:
+      """
