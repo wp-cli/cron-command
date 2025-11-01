@@ -378,14 +378,14 @@ Feature: Manage WP-Cron events and schedules
       https://example.com
       """
 
-    When I run `wp cron test`
-    Then STDOUT should contain:
+    When I try `wp cron test`
+    Then STDERR should contain:
       """
-      Success: WP-Cron spawning is working as expected.
+      Warning: The ALTERNATE_WP_CRON constant is set to true. WP-Cron spawning is not asynchronous.
       """
     And STDERR should contain:
       """
-      Warning: The ALTERNATE_WP_CRON constant is set to true. WP-Cron spawning is not asynchronous.
+      Error: WP-Cron spawn returned HTTP status code: 403 Forbidden
       """
 
   Scenario: Listing duplicated cron events
