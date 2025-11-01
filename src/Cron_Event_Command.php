@@ -249,7 +249,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			++$executed;
 			WP_CLI::log( sprintf( "Executed the cron event '%s' in %ss.", $event->hook, $total ) );
 			if ( ! empty( $event->args ) ) {
-				WP_CLI::debug( sprintf( "Arguments: %s", wp_json_encode( $event->args ) ), 'cron' );
+				WP_CLI::debug( sprintf( 'Arguments: %s', wp_json_encode( $event->args ) ), 'cron' );
 			}
 		}
 

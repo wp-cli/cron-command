@@ -145,7 +145,7 @@ Feature: Manage WP Cron events
       """
     And STDOUT should contain:
       """
-      Debug (cron): Arguments: ["123","test-value"]
+      Debug: Arguments: ["123","test-value"]
       """
 
     When I run `wp cron event schedule wp_cli_test_event_no_args now`
