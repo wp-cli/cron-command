@@ -375,7 +375,7 @@ Feature: Manage WP-Cron events and schedules
       """
       <?php
       add_filter( 'cron_request', static function ( $cron_request_array ) {
-        $cron_request_array['url']               = str_replace( 'https://example.com', 'http://localhost:8080', $cron_request_array['url'] );
+        $cron_request_array['url']               = str_replace( home_url(), 'http://localhost:8080', $cron_request_array['url'] );
         $cron_request_array['args']['sslverify'] = false;
         return $cron_request_array;
       } );
