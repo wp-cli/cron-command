@@ -365,6 +365,21 @@ Feature: Manage WP-Cron events and schedules
       require:
         - alternate-wp-cron.php
       """
+    And a php.ini file:
+      """
+      error_log = {RUN_DIR}/server.log
+      log_errors = on
+      """
+    And I launch in the background `wp server --host=localhost --port=8080 --config=php.ini`
+    And a wp-content/mu-plugins/set_cron_site_url.php file:
+      """
+      <?php
+      add_filter( 'cron_request', static function ( $cron_request_array ) {
+        $cron_request_array['url']               = str_replace( home_url(), 'http://localhost:8080', $cron_request_array['url'] );
+        $cron_request_array['args']['sslverify'] = false;
+        return $cron_request_array;
+      } );
+      """
 
     When I run `wp eval 'var_export( ALTERNATE_WP_CRON );'`
     Then STDOUT should be:
@@ -379,13 +394,13 @@ Feature: Manage WP-Cron events and schedules
       """
 
     When I try `wp cron test`
-    Then STDERR should contain:
+    Then STDOUT should contain:
       """
-      Warning: The ALTERNATE_WP_CRON constant is set to true. WP-Cron spawning is not asynchronous.
+      Success: WP-Cron spawning is working as expected.
       """
     And STDERR should contain:
       """
-      Error: WP-Cron spawn returned HTTP status code: 403 Forbidden
+      Warning: The ALTERNATE_WP_CRON constant is set to true. WP-Cron spawning is not asynchronous.
       """
 
   Scenario: Listing duplicated cron events
