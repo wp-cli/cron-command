@@ -398,7 +398,7 @@ Feature: Manage WP-Cron events and schedules
       """
       Success: WP-Cron spawning is working as expected.
       """
-    Then STDERR should contain:
+    And STDERR should contain:
       """
       Warning: The ALTERNATE_WP_CRON constant is set to true. WP-Cron spawning is not asynchronous.
       """
