@@ -625,7 +625,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		$hook = $wp_filter[ $hook_name ];
 
 		// Get callbacks from the WP_Hook object (WordPress 4.7+)
-		if ( $hook instanceof WP_Hook ) {
+		if ( $hook instanceof \WP_Hook ) {
 			$callbacks = $hook->callbacks;
 		} else {
 			// Fallback for older WordPress versions
@@ -671,7 +671,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			}
 
 			return $class_name . '::' . $method;
-		} elseif ( $callback instanceof Closure ) {
+		} elseif ( $callback instanceof \Closure ) {
 			// Closure/anonymous function
 			return 'Closure';
 		} elseif ( is_object( $callback ) ) {
