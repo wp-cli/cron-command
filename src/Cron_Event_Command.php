@@ -85,6 +85,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * * schedule
 	 * * interval
 	 * * next_run
+	 * * actions
 	 *
 	 * ## EXAMPLES
 	 *
@@ -398,6 +399,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		$event->next_run          = get_date_from_gmt( date( 'Y-m-d H:i:s', $event->time ), self::$time_format ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 		$event->next_run_gmt      = date( self::$time_format, $event->time ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 		$event->next_run_relative = self::interval( $event->time - time() );
+		$event->actions           = self::get_hook_actions( $event->hook );
 
 		return $event;
 	}
@@ -605,5 +607,79 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 	private function get_formatter( &$assoc_args ) {
 		return new \WP_CLI\Formatter( $assoc_args, $this->fields, 'event' );
+	}
+
+	/**
+	 * Gets the actions (callbacks) registered for a specific hook.
+	 *
+	 * @param string $hook_name The name of the hook.
+	 * @return string A comma-separated list of action callbacks, or 'None' if no actions are registered.
+	 */
+	protected static function get_hook_actions( $hook_name ) {
+		global $wp_filter;
+
+		if ( ! isset( $wp_filter[ $hook_name ] ) ) {
+			return 'None';
+		}
+
+		$hook = $wp_filter[ $hook_name ];
+
+		// Get callbacks from the WP_Hook object (WordPress 4.7+)
+		if ( is_a( $hook, 'WP_Hook' ) ) {
+			$callbacks = $hook->callbacks;
+		} else {
+			// Fallback for older WordPress versions
+			$callbacks = $hook;
+		}
+
+		if ( empty( $callbacks ) ) {
+			return 'None';
+		}
+
+		$actions = array();
+
+		// Iterate through all priorities
+		foreach ( $callbacks as $priority => $priority_callbacks ) {
+			foreach ( $priority_callbacks as $callback_info ) {
+				$callback  = $callback_info['function'];
+				$actions[] = self::format_callback( $callback );
+			}
+		}
+
+		return implode( ', ', $actions );
+	}
+
+	/**
+	 * Formats a callback into a readable string.
+	 *
+	 * @param callable $callback The callback to format.
+	 * @return string A formatted string representing the callback.
+	 */
+	protected static function format_callback( $callback ) {
+		if ( is_string( $callback ) ) {
+			// Simple function name
+			return $callback;
+		} elseif ( is_array( $callback ) && count( $callback ) === 2 ) {
+			// Class method: array( $object_or_class, 'method_name' )
+			$class  = $callback[0];
+			$method = $callback[1];
+
+			if ( is_object( $class ) ) {
+				$class_name = get_class( $class );
+			} else {
+				$class_name = $class;
+			}
+
+			return $class_name . '::' . $method;
+		} elseif ( is_object( $callback ) && is_a( $callback, 'Closure' ) ) {
+			// Closure/anonymous function
+			return 'Closure';
+		} elseif ( is_object( $callback ) ) {
+			// Invokable object
+			return get_class( $callback ) . '::__invoke';
+		}
+
+		// Fallback for unknown callback types
+		return 'Unknown';
 	}
 }

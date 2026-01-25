@@ -158,3 +158,47 @@ Feature: Manage WP Cron events
       """
       Debug: Arguments:
       """
+
+  Scenario: List cron events with actions field
+    Given a wp-content/mu-plugins/test-cron-actions.php file:
+      """
+      <?php
+      add_action( 'wp_cli_test_hook', 'wp_cli_test_function' );
+      add_action( 'wp_cli_test_hook', array( 'MyTestClass', 'my_method' ) );
+
+      function wp_cli_test_function() {
+        // Test function
+      }
+
+      class MyTestClass {
+        public static function my_method() {
+          // Test method
+        }
+      }
+      """
+
+    When I run `wp cron event schedule wp_cli_test_hook now`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_test_hook'
+      """
+
+    When I run `wp cron event list --fields=hook,actions --format=csv`
+    Then STDOUT should contain:
+      """
+      wp_cli_test_function
+      """
+    And STDOUT should contain:
+      """
+      MyTestClass::my_method
+      """
+
+    When I run `wp cron event list --hook=wp_cli_test_hook --fields=hook,actions --format=json`
+    Then STDOUT should be JSON containing:
+      """
+      [{"hook":"wp_cli_test_hook"}]
+      """
+    And STDOUT should contain:
+      """
+      wp_cli_test_function
+      """
