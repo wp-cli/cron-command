@@ -263,7 +263,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			}
 
 			$total_executed = 0;
-			$site_count     = 0;
+			$site_count     = count( $sites );
 
 			foreach ( $sites as $site_id ) {
 				switch_to_blog( $site_id );
@@ -281,18 +281,19 @@ class Cron_Event_Command extends WP_CLI_Command {
 							WP_CLI::debug( sprintf( 'Arguments: %s', wp_json_encode( $event->args ) ), 'cron' );
 						}
 					}
-					++$site_count;
 				}
 
 				restore_current_blog();
 			}
 
-			if ( 1 === $total_executed ) {
-				$message = 'Executed a total of %d cron event across %d %s.';
-			} else {
-				$message = 'Executed a total of %d cron events across %d %s.';
-			}
-			WP_CLI::success( sprintf( $message, $total_executed, $site_count, Utils\pluralize( 'site', $site_count ) ) );
+			$message = sprintf(
+				'Executed a total of %d %s across %d %s.',
+				$total_executed,
+				Utils\pluralize( 'cron event', $total_executed ),
+				$site_count,
+				Utils\pluralize( 'site', $site_count )
+			);
+			WP_CLI::success( $message );
 			return;
 		}
 
