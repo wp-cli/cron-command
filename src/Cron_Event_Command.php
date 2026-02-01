@@ -262,13 +262,17 @@ class Cron_Event_Command extends WP_CLI_Command {
 				WP_CLI::error( 'No sites found in the network.' );
 			}
 
+			// Remove network flag before passing to get_selected_cron_events.
+			$network_assoc_args = $assoc_args;
+			unset( $network_assoc_args['network'] );
+
 			$total_executed = 0;
 			$site_count     = count( $sites );
 
 			foreach ( $sites as $site_id ) {
 				switch_to_blog( $site_id );
 
-				$events = self::get_selected_cron_events( $args, $assoc_args );
+				$events = self::get_selected_cron_events( $args, $network_assoc_args );
 
 				if ( ! is_wp_error( $events ) ) {
 					foreach ( $events as $event ) {
@@ -281,6 +285,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 							WP_CLI::debug( sprintf( 'Arguments: %s', wp_json_encode( $event->args ) ), 'cron' );
 						}
 					}
+				} else {
+					WP_CLI::debug( sprintf( 'No events found for site %d: %s', $site_id, $events->get_error_message() ), 'cron' );
 				}
 
 				restore_current_blog();
