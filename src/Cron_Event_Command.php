@@ -225,6 +225,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * [--all]
 	 * : Run all hooks.
 	 *
+	 * [--network]
+	 * : Run hooks across all sites in a multisite installation.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Run all cron events due right now
@@ -232,8 +235,66 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *     Executed the cron event 'cron_test_1' in 0.01s.
 	 *     Executed the cron event 'cron_test_2' in 0.006s.
 	 *     Success: Executed a total of 2 cron events.
+	 *
+	 *     # Run all cron events due right now across all sites in a multisite
+	 *     $ wp cron event run --due-now --network
+	 *     Executed the cron event 'cron_test_1' in 0.01s.
+	 *     Executed the cron event 'cron_test_2' in 0.006s.
+	 *     Success: Executed a total of 2 cron events across 3 sites.
 	 */
 	public function run( $args, $assoc_args ) {
+
+		$network = Utils\get_flag_value( $assoc_args, 'network' );
+
+		if ( $network ) {
+			if ( ! is_multisite() ) {
+				WP_CLI::error( 'This is not a multisite installation.' );
+			}
+
+			$sites = get_sites(
+				array(
+					'fields' => 'ids',
+					'number' => 0,
+				)
+			);
+
+			if ( empty( $sites ) ) {
+				WP_CLI::error( 'No sites found in the network.' );
+			}
+
+			$total_executed = 0;
+			$site_count     = 0;
+
+			foreach ( $sites as $site_id ) {
+				switch_to_blog( $site_id );
+
+				$events = self::get_selected_cron_events( $args, $assoc_args );
+
+				if ( ! is_wp_error( $events ) ) {
+					foreach ( $events as $event ) {
+						$start  = microtime( true );
+						$result = self::run_event( $event );
+						$total  = round( microtime( true ) - $start, 3 );
+						++$total_executed;
+						WP_CLI::log( sprintf( "Executed the cron event '%s' in %ss.", $event->hook, $total ) );
+						if ( ! empty( $event->args ) ) {
+							WP_CLI::debug( sprintf( 'Arguments: %s', wp_json_encode( $event->args ) ), 'cron' );
+						}
+					}
+					++$site_count;
+				}
+
+				restore_current_blog();
+			}
+
+			if ( 1 === $total_executed ) {
+				$message = 'Executed a total of %d cron event across %d %s.';
+			} else {
+				$message = 'Executed a total of %d cron events across %d %s.';
+			}
+			WP_CLI::success( sprintf( $message, $total_executed, $site_count, Utils\pluralize( 'site', $site_count ) ) );
+			return;
+		}
 
 		$events = self::get_selected_cron_events( $args, $assoc_args );
 
