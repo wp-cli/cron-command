@@ -195,9 +195,5 @@ Feature: Manage WP Cron events
       """
     And STDOUT should contain:
       """
-      Success: Executed a total of 2 cron events across
-      """
-    And STDOUT should contain:
-      """
-      sites.
+      Success: Executed a total of 2 cron events across 3 sites.
       """
