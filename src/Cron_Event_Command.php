@@ -114,6 +114,13 @@ class Cron_Event_Command extends WP_CLI_Command {
 			$events = array();
 		}
 
+		// Populate actions field only if requested
+		if ( ! empty( $formatter->fields ) && in_array( 'actions', $formatter->fields, true ) ) {
+			foreach ( $events as $event ) {
+				$event->actions = self::get_hook_actions( $event->hook );
+			}
+		}
+
 		foreach ( $events as $key => $event ) {
 			foreach ( $this->fields as $field ) {
 				if ( ! empty( $assoc_args[ $field ] ) && $event->{$field} !== $assoc_args[ $field ] ) {

@@ -165,6 +165,9 @@ Feature: Manage WP Cron events
       <?php
       add_action( 'wp_cli_test_hook', 'wp_cli_test_function' );
       add_action( 'wp_cli_test_hook', array( 'MyTestClass', 'my_method' ) );
+      add_action( 'wp_cli_test_hook_closure', function() {
+        // Test closure
+      } );
 
       function wp_cli_test_function() {
         // Test function
@@ -201,4 +204,28 @@ Feature: Manage WP Cron events
     And STDOUT should contain:
       """
       wp_cli_test_function
+      """
+
+    When I run `wp cron event schedule wp_cli_test_hook_closure now`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_test_hook_closure'
+      """
+
+    When I run `wp cron event list --hook=wp_cli_test_hook_closure --fields=hook,actions --format=csv`
+    Then STDOUT should contain:
+      """
+      Closure
+      """
+
+    When I run `wp cron event schedule wp_cli_test_hook_no_actions now`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_test_hook_no_actions'
+      """
+
+    When I run `wp cron event list --hook=wp_cli_test_hook_no_actions --fields=hook,actions --format=csv`
+    Then STDOUT should contain:
+      """
+      None
       """
