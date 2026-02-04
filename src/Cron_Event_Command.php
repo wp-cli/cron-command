@@ -275,16 +275,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 				$events = self::get_selected_cron_events( $args, $network_assoc_args );
 
 				if ( ! is_wp_error( $events ) ) {
-					foreach ( $events as $event ) {
-						$start  = microtime( true );
-						$result = self::run_event( $event );
-						$total  = round( microtime( true ) - $start, 3 );
-						++$total_executed;
-						WP_CLI::log( sprintf( "Executed the cron event '%s' in %ss.", $event->hook, $total ) );
-						if ( ! empty( $event->args ) ) {
-							WP_CLI::debug( sprintf( 'Arguments: %s', wp_json_encode( $event->args ) ), 'cron' );
-						}
-					}
+					$total_executed += self::run_events( $events );
 				} else {
 					WP_CLI::debug( sprintf( 'No events found for site %d: %s', $site_id, $events->get_error_message() ), 'cron' );
 				}
@@ -309,17 +300,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::error( $events );
 		}
 
-		$executed = 0;
-		foreach ( $events as $event ) {
-			$start  = microtime( true );
-			$result = self::run_event( $event );
-			$total  = round( microtime( true ) - $start, 3 );
-			++$executed;
-			WP_CLI::log( sprintf( "Executed the cron event '%s' in %ss.", $event->hook, $total ) );
-			if ( ! empty( $event->args ) ) {
-				WP_CLI::debug( sprintf( 'Arguments: %s', wp_json_encode( $event->args ) ), 'cron' );
-			}
-		}
+		$executed = self::run_events( $events );
 
 		$message = ( 1 === $executed ) ? 'Executed a total of %d cron event.' : 'Executed a total of %d cron events.';
 		WP_CLI::success( sprintf( $message, $executed ) );
@@ -409,6 +390,29 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		$message = sprintf( 'Deleted a total of %d %s.', $deleted, Utils\pluralize( 'cron event', $deleted ) );
 		WP_CLI::success( sprintf( $message, $deleted ) );
+	}
+
+	/**
+	 * Runs multiple cron events and logs their execution.
+	 *
+	 * @param array $events Array of event objects to run.
+	 * @return int The number of events executed.
+	 */
+	private static function run_events( array $events ) {
+		$executed = 0;
+
+		foreach ( $events as $event ) {
+			$start = microtime( true );
+			self::run_event( $event );
+			$total = round( microtime( true ) - $start, 3 );
+			++$executed;
+			WP_CLI::log( sprintf( "Executed the cron event '%s' in %ss.", $event->hook, $total ) );
+			if ( ! empty( $event->args ) ) {
+				WP_CLI::debug( sprintf( 'Arguments: %s', wp_json_encode( $event->args ) ), 'cron' );
+			}
+		}
+
+		return $executed;
 	}
 
 	/**
