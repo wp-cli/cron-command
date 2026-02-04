@@ -640,6 +640,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 		// Iterate through all priorities
 		foreach ( $callbacks as $priority => $priority_callbacks ) {
 			foreach ( $priority_callbacks as $callback_info ) {
+				if ( ! isset( $callback_info['function'] ) ) {
+					continue;
+				}
 				$callback  = $callback_info['function'];
 				$actions[] = self::format_callback( $callback );
 			}
