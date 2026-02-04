@@ -399,7 +399,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 		$event->next_run          = get_date_from_gmt( date( 'Y-m-d H:i:s', $event->time ), self::$time_format ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 		$event->next_run_gmt      = date( self::$time_format, $event->time ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 		$event->next_run_relative = self::interval( $event->time - time() );
-		$event->actions           = self::get_hook_actions( $event->hook );
 
 		return $event;
 	}
