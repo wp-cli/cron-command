@@ -657,10 +657,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 */
 	protected static function format_callback( $callback ) {
 		if ( is_string( $callback ) ) {
-			// Simple function name
 			return $callback;
 		} elseif ( is_array( $callback ) && count( $callback ) === 2 ) {
-			// Class method: array( $object_or_class, 'method_name' )
 			$class  = $callback[0];
 			$method = $callback[1];
 
@@ -672,10 +670,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 			return $class_name . '::' . $method;
 		} elseif ( $callback instanceof \Closure ) {
-			// Closure/anonymous function
 			return 'Closure';
 		} elseif ( is_object( $callback ) ) {
-			// Invokable object
 			return get_class( $callback ) . '::__invoke';
 		}
 
