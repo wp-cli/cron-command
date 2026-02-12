@@ -160,16 +160,16 @@ Feature: Manage WP Cron events
       """
 
   Scenario: Confirm that cron event run in debug mode shows the start of events
-    When I run `wp cron event run --due-now --debug=cron`
-    Then STDERR should contain:
+    When I run `wp cron event run wp_version_check --debug=cron`
+    Then STDOUT should contain:
       """
-      Beginning execution of cron event
-      """
-    And STDOUT should contain:
-      """
-      Executed the cron event
+      Executed the cron event 'wp_version_check'
       """
     And STDOUT should contain:
       """
-      Executed a total of
+      Executed a total of 1 cron event
+      """
+    And STDERR should contain:
+      """
+      Debug: Beginning execution of cron event 'wp_version_check'
       """
