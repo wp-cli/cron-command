@@ -185,20 +185,20 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::error( sprintf( "'%s' is not a valid datetime.", $next_run ) );
 		}
 
-		if ( ! empty( $recurrence ) ) {
+		$cron_args = $assoc_args;
+		ksort( $cron_args );
+		$cron_args = array_values( $cron_args );
 
+		if ( ! empty( $recurrence ) ) {
 			$schedules = wp_get_schedules();
 
 			if ( ! isset( $schedules[ $recurrence ] ) ) {
 				WP_CLI::error( sprintf( "'%s' is not a valid schedule name for recurrence.", $recurrence ) );
 			}
 
-			$event = wp_schedule_event( $timestamp, $recurrence, $hook, $assoc_args );
-
+			$event = wp_schedule_event( $timestamp, $recurrence, $hook, $cron_args );
 		} else {
-
-			$event = wp_schedule_single_event( $timestamp, $hook, $assoc_args );
-
+			$event = wp_schedule_single_event( $timestamp, $hook, $cron_args );
 		}
 
 		if ( false !== $event ) {
