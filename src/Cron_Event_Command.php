@@ -225,9 +225,6 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * [--all]
 	 * : Run all hooks.
 	 *
-	 * [--verbose]
-	 * : List event both before and after execution.
-	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Run all cron events due right now
@@ -247,9 +244,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		$executed = 0;
 		$verbose  = Utils\get_flag_value( $assoc_args, 'verbose' );
 		foreach ( $events as $event ) {
-			if ( $verbose ) {
-				WP_CLI::log( sprintf( "Beginning execution of cron event '%s'.", $event->hook ) );
-			}
+			WP_CLI::debug( sprintf( "Beginning execution of cron event '%s'.", $event->hook ), 'cron' );
 			$start  = microtime( true );
 			$result = self::run_event( $event );
 			$total  = round( microtime( true ) - $start, 3 );

@@ -159,9 +159,9 @@ Feature: Manage WP Cron events
       Debug: Arguments:
       """
 
-  Scenario: Confirm that cron event run with verbose flag lists both before and after
-    When I run `wp cron event run --due-now --verbose`
-    Then STDOUT should contain:
+  Scenario: Confirm that cron event run in debug mode shows the start of events
+    When I run `wp cron event run --due-now --debug=cron`
+    Then STDERR should contain:
       """
       Beginning execution of cron event
       """
