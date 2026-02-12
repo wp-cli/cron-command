@@ -160,7 +160,7 @@ Feature: Manage WP Cron events
       """
 
   Scenario: Confirm that cron event run with verbose flag lists both before and after
-    When I run `wp cron event run wp_cli_test_event_1 --due-now --verbose`
+    When I run `wp cron event run --due-now --verbose`
     Then STDOUT should contain:
       """
       Beginning execution of cron event
