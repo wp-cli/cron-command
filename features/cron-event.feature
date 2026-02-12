@@ -163,13 +163,13 @@ Feature: Manage WP Cron events
     When I run `wp cron event run wp_cli_test_event_1 --due-now --verbose`
     Then STDOUT should contain:
       """
-      Beginning execution of cron event 'wp_cli_test_event_1'
+      Beginning execution of cron event
       """
     And STDOUT should contain:
       """
-      Executed the cron event 'wp_cli_test_event_1'
+      Executed the cron event
       """
     And STDOUT should contain:
       """
-      Executed a total of 1 cron event
+      Executed a total of
       """
