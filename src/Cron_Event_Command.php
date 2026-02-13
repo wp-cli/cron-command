@@ -243,6 +243,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		$executed = 0;
 		foreach ( $events as $event ) {
+			WP_CLI::debug( sprintf( "Beginning execution of cron event '%s'.", $event->hook ), 'cron' );
 			$start  = microtime( true );
 			$result = self::run_event( $event );
 			$total  = round( microtime( true ) - $start, 3 );
