@@ -186,19 +186,19 @@ class Cron_Event_Command extends WP_CLI_Command {
 		}
 
 		if ( ! empty( $recurrence ) ) {
-
 			$schedules = wp_get_schedules();
 
 			if ( ! isset( $schedules[ $recurrence ] ) ) {
 				WP_CLI::error( sprintf( "'%s' is not a valid schedule name for recurrence.", $recurrence ) );
 			}
 
+			// WordPress expects a list bug we knowingly pass an associative array.
+			// @phpstan-ignore argument.type
 			$event = wp_schedule_event( $timestamp, $recurrence, $hook, $assoc_args );
-
 		} else {
-
+			// Ditto.
+			// @phpstan-ignore argument.type
 			$event = wp_schedule_single_event( $timestamp, $hook, $assoc_args );
-
 		}
 
 		if ( false !== $event ) {
