@@ -184,7 +184,7 @@ Feature: Manage WP Cron events
       Success: Scheduled event with hook 'wp_cli_network_test_site2'
       """
 
-    When I run `wp cron event run wp_cli_network_test wp_cli_network_test_site2 --due-now --network`
+    When I run `wp cron event run --due-now --network --exclude=wp_privacy_delete_old_export_files,wp_version_check,wp_update_plugins,wp_update_themes,wp_site_health_scheduled_check,wp_update_user_counts,wp_scheduled_delete,wp_scheduled_auto_draft_delete`
     Then STDOUT should contain:
       """
       Executed the cron event 'wp_cli_network_test'
