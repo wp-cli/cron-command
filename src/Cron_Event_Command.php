@@ -671,6 +671,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 		if ( is_string( $callback ) ) {
 			return $callback;
 		} elseif ( is_array( $callback ) && count( $callback ) === 2 ) {
+			/**
+			 * @var array{0: string, 1: string} $callback
+			 */
 			$class  = $callback[0];
 			$method = $callback[1];
 
