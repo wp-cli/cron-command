@@ -625,10 +625,17 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * @return string A comma-separated list of action callbacks, or 'None' if no actions are registered.
 	 */
 	protected static function get_hook_actions( $hook_name ) {
+		static $cache = array();
+
+		if ( isset( $cache[ $hook_name ] ) ) {
+			return $cache[ $hook_name ];
+		}
+
 		global $wp_filter;
 
 		if ( ! isset( $wp_filter[ $hook_name ] ) ) {
-			return 'None';
+			$cache[ $hook_name ] = 'None';
+			return $cache[ $hook_name ];
 		}
 
 		$hook = $wp_filter[ $hook_name ];
@@ -642,8 +649,11 @@ class Cron_Event_Command extends WP_CLI_Command {
 		}
 
 		if ( empty( $callbacks ) ) {
-			return 'None';
+			$cache[ $hook_name ] = 'None';
+			return $cache[ $hook_name ];
 		}
+
+		ksort( $callbacks );
 
 		$actions = array();
 
@@ -658,7 +668,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 			}
 		}
 
-		return implode( ', ', $actions );
+		$result              = empty( $actions ) ? 'None' : implode( ', ', $actions );
+		$cache[ $hook_name ] = $result;
+		return $cache[ $hook_name ];
 	}
 
 	/**
