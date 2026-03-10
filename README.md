@@ -160,6 +160,7 @@ These fields are optionally available:
 * schedule
 * interval
 * next_run
+* actions
 
 **EXAMPLES**
 
