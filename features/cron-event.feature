@@ -159,6 +159,45 @@ Feature: Manage WP Cron events
       Debug: Arguments:
       """
 
+  Scenario: Run cron events with --network flag on non-multisite
+    When I try `wp cron event run --due-now --network`
+    Then STDERR should be:
+      """
+      Error: This is not a multisite installation.
+      """
+    And the return code should be 1
+
+  Scenario: Run cron events with --network flag on multisite
+    Given a WP multisite subdirectory install
+    And I run `wp site create --slug=site2`
+    And I run `wp site create --slug=site3`
+
+    When I run `wp cron event schedule wp_cli_network_test now`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_network_test'
+      """
+
+    When I run `wp --url=example.com/site2 cron event schedule wp_cli_network_test_site2 now`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_network_test_site2'
+      """
+
+    When I run `wp cron event run --due-now --network --exclude=wp_privacy_delete_old_export_files,wp_version_check,wp_update_plugins,wp_update_themes,wp_site_health_scheduled_check,wp_update_user_counts,wp_scheduled_delete,wp_scheduled_auto_draft_delete`
+    Then STDOUT should contain:
+      """
+      Executed the cron event 'wp_cli_network_test'
+      """
+    And STDOUT should contain:
+      """
+      Executed the cron event 'wp_cli_network_test_site2'
+      """
+    And STDOUT should contain:
+      """
+      Success: Executed a total of 2 cron events across 3 sites.
+      """
+
   Scenario: Confirm that cron event run in debug mode shows the start of events
     When I try `wp cron event run wp_version_check --debug=cron`
     Then STDOUT should contain:
