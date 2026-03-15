@@ -255,7 +255,7 @@ Feature: Manage WP Cron events
     # Simulate an in-progress cron run by setting the doing_cron transient to now.
     When I run `wp eval 'set_transient( "doing_cron", sprintf( "%.22F", microtime( true ) ) );'`
 
-    When I run `wp cron event run --due-now`
+    And I try `wp cron event run --due-now`
     Then STDERR should contain:
       """
       Warning: A cron event run is already in progress; skipping.
@@ -267,7 +267,7 @@ Feature: Manage WP Cron events
 
     # After the transient is cleared, the run should proceed normally.
     When I run `wp transient delete doing_cron`
-    And I run `wp cron event run --due-now`
+    And I try `wp cron event run --due-now`
     Then STDOUT should contain:
       """
       Executed the cron event 'wp_cli_test_event_lock'
