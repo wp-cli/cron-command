@@ -244,3 +244,35 @@ Feature: Manage WP Cron events
       """
       Debug: Beginning execution of cron event 'wp_version_check'
       """
+
+  Scenario: --due-now respects the doing_cron transient and skips when another run is in progress
+    When I run `wp cron event schedule wp_cli_test_event_lock now hourly`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_test_event_lock'
+      """
+
+    # Simulate an in-progress cron run by setting the doing_cron transient to now.
+    When I run `wp eval 'set_transient( "doing_cron", sprintf( "%.22F", microtime( true ) ) );'`
+
+    And I try `wp cron event run --due-now`
+    Then STDERR should contain:
+      """
+      Warning: A cron event run is already in progress; skipping.
+      """
+    And STDOUT should not contain:
+      """
+      wp_cli_test_event_lock
+      """
+
+    # After the transient is cleared, the run should proceed normally.
+    When I run `wp transient delete doing_cron`
+    And I try `wp cron event run --due-now`
+    Then STDOUT should contain:
+      """
+      Executed the cron event 'wp_cli_test_event_lock'
+      """
+    And STDOUT should contain:
+      """
+      Executed a total of 1 cron event
+      """
