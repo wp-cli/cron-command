@@ -307,28 +307,38 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		list( $hook ) = $args;
 
+		// Count events before unscheduling for WP < 5.1 compatibility where
+		// wp_unschedule_hook() returns null instead of the event count.
+		$crons       = _get_cron_array();
+		$event_count = 0;
+		if ( is_array( $crons ) ) {
+			foreach ( $crons as $cron ) {
+				if ( isset( $cron[ $hook ] ) ) {
+					$event_count += count( $cron[ $hook ] );
+				}
+			}
+		}
+
+		if ( 0 === $event_count ) {
+			WP_CLI::error( sprintf( "No events found for hook '%s'.", $hook ) );
+		}
+
 		$unscheduled = wp_unschedule_hook( $hook );
 
-		if ( empty( $unscheduled ) ) {
-			$message = 'Failed to unschedule events for hook \'%1\$s.';
-
-			// If 0 event found on hook.
-			if ( 0 === $unscheduled ) {
-				$message = "No events found for hook '%1\$s'.";
-			}
-
-			WP_CLI::error( sprintf( $message, $hook ) );
-
-		} else {
-			WP_CLI::success(
-				sprintf(
-					'Unscheduled %1$d %2$s for hook \'%3$s\'.',
-					$unscheduled,
-					Utils\pluralize( 'event', $unscheduled ),
-					$hook
-				)
-			);
+		if ( false === $unscheduled ) {
+			WP_CLI::error( sprintf( "Failed to unschedule events for hook '%s'.", $hook ) );
 		}
+
+		$count = ( is_int( $unscheduled ) && $unscheduled > 0 ) ? $unscheduled : $event_count;
+
+		WP_CLI::success(
+			sprintf(
+				'Unscheduled %1$d %2$s for hook \'%3$s\'.',
+				$count,
+				Utils\pluralize( 'event', $count ),
+				$hook
+			)
+		);
 	}
 
 	/**
