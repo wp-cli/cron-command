@@ -326,17 +326,63 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * [--all]
 	 * : Delete all hooks.
 	 *
+	 * [--match-args=<args>]
+	 * : Only delete events whose arguments match the given JSON-encoded array or scalar value. Argument types must match exactly (for example, `["123"]` vs `[123]`). Requires exactly one hook name.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Delete all scheduled cron events for the given hook
 	 *     $ wp cron event delete cron_test
 	 *     Success: Deleted a total of 2 cron events.
+	 *
+	 *     # Delete a specific cron event by hook and arguments
+	 *     $ wp cron event delete cron_test --match-args='["123"]'
+	 *     Success: Deleted a total of 1 cron event.
 	 */
 	public function delete( $args, $assoc_args ) {
+		$match_args = Utils\get_flag_value( $assoc_args, 'match-args' );
+
+		if ( null !== $match_args ) {
+			if ( 1 !== count( $args ) ) {
+				WP_CLI::error( 'The --match-args parameter requires exactly one hook name.' );
+			}
+
+			if ( Utils\get_flag_value( $assoc_args, 'all' ) || Utils\get_flag_value( $assoc_args, 'due-now' ) ) {
+				WP_CLI::error( 'The --match-args parameter cannot be combined with --all or --due-now.' );
+			}
+
+			$trimmed_match_args = ltrim( $match_args );
+
+			// Only JSON-decode when the value clearly looks like JSON:
+			// - starts with '[' for arrays
+			// - starts with '"' for explicitly quoted strings
+			if ( '' !== $trimmed_match_args && ( '[' === $trimmed_match_args[0] || '"' === $trimmed_match_args[0] ) ) {
+				$decoded_args = json_decode( $match_args, true );
+				if ( null === $decoded_args && JSON_ERROR_NONE !== json_last_error() ) {
+					// Not valid JSON — treat as a single string argument wrapped in an array.
+					$decoded_args = array( $match_args );
+				} elseif ( ! is_array( $decoded_args ) ) {
+					$decoded_args = array( $decoded_args );
+				}
+			} else {
+				// Treat non-JSON-looking values as a single string argument.
+				$decoded_args = array( $match_args );
+			}
+		}
+
 		$events = self::get_selected_cron_events( $args, $assoc_args );
 
 		if ( is_wp_error( $events ) ) {
 			WP_CLI::error( $events );
+		}
+
+		if ( null !== $match_args ) {
+			$events = array_filter(
+				$events,
+				function ( $event ) use ( $decoded_args ) {
+					return $event->args === $decoded_args;
+				}
+			);
 		}
 
 		$deleted = 0;

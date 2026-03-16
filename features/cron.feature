@@ -583,3 +583,68 @@ Feature: Manage WP-Cron events and schedules
       """
       Error: Please either specify cron events, or use --all.
       """
+
+  Scenario: Delete a specific cron event by matching args
+    When I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --0=banana`
+    And I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --0=bar`
+    Then STDOUT should not be empty
+
+    When I run `wp cron event list --format=csv --fields=hook,recurrence,args`
+    Then STDOUT should be CSV containing:
+      | hook                | recurrence    | args       |
+      | wp_cli_test_event_5 | Non-repeating | ["banana"] |
+      | wp_cli_test_event_5 | Non-repeating | ["bar"]    |
+
+    When I run `wp cron event delete wp_cli_test_event_5 --match-args='["banana"]'`
+    Then STDOUT should be:
+      """
+      Success: Deleted a total of 1 cron event.
+      """
+
+    When I run `wp cron event list --format=csv --fields=hook,args`
+    Then STDOUT should be CSV containing:
+      | hook                | args     |
+      | wp_cli_test_event_5 | ["bar"]  |
+    And STDOUT should not contain:
+      """
+      ["banana"]
+      """
+
+    When I run `wp cron event delete wp_cli_test_event_5 --match-args=bar`
+    Then STDOUT should be:
+      """
+      Success: Deleted a total of 1 cron event.
+      """
+
+    When I try `wp cron event list`
+    Then STDOUT should not contain:
+      """
+      wp_cli_test_event_5
+      """
+
+    When I run `wp cron event schedule wp_cli_test_event_5 '+20 minutes' --0=banana`
+    Then STDOUT should not be empty
+
+    When I try `wp cron event delete wp_cli_test_event_5 --match-args='["banana"]' --all`
+    Then STDERR should be:
+      """
+      Error: The --match-args parameter cannot be combined with --all or --due-now.
+      """
+
+    When I try `wp cron event delete wp_cli_test_event_5 --match-args='["banana"]' --due-now`
+    Then STDERR should be:
+      """
+      Error: The --match-args parameter cannot be combined with --all or --due-now.
+      """
+
+    When I try `wp cron event delete --match-args='["banana"]'`
+    Then STDERR should be:
+      """
+      Error: The --match-args parameter requires exactly one hook name.
+      """
+
+    When I try `wp cron event delete wp_cli_test_event_5 wp_cli_test_event_5 --match-args='["banana"]'`
+    Then STDERR should be:
+      """
+      Error: The --match-args parameter requires exactly one hook name.
+      """
