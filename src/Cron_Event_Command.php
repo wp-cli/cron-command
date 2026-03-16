@@ -248,19 +248,19 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		if ( $due_now ) {
 			$lock_timeout         = defined( 'WP_CRON_LOCK_TIMEOUT' ) ? WP_CRON_LOCK_TIMEOUT : 60;
-			$doing_cron_transient = get_transient( 'wp_cli_doing_cron' );
+			$doing_cron_transient = get_transient( 'doing_cron' );
 			if ( is_numeric( $doing_cron_transient ) && (float) $doing_cron_transient > microtime( true ) - $lock_timeout ) {
 				WP_CLI::warning( 'A cron event run is already in progress; skipping.' );
 				return;
 			}
-			set_transient( 'wp_cli_doing_cron', sprintf( '%.22F', microtime( true ) ) );
+			set_transient( 'doing_cron', sprintf( '%.22F', microtime( true ) ) );
 		}
 
 		$events = self::get_selected_cron_events( $args, $assoc_args );
 
 		if ( is_wp_error( $events ) ) {
 			if ( $due_now ) {
-				delete_transient( 'wp_cli_doing_cron' );
+				delete_transient( 'doing_cron' );
 			}
 			WP_CLI::error( $events );
 		}
@@ -279,7 +279,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		}
 
 		if ( $due_now ) {
-			delete_transient( 'wp_cli_doing_cron' );
+			delete_transient( 'doing_cron' );
 		}
 
 		$message = ( 1 === $executed ) ? 'Executed a total of %d cron event.' : 'Executed a total of %d cron events.';
