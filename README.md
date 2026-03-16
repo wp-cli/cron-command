@@ -201,7 +201,8 @@ wp cron event run [<hook>...] [--due-now] [--exclude=<hooks>] [--all]
 		One or more hooks to run.
 
 	[--due-now]
-		Run all hooks due right now.
+		Run all hooks due right now. Respects the doing_cron transient to
+		prevent overlapping runs.
 
 	[--exclude=<hooks>]
 		Comma-separated list of hooks to exclude.
