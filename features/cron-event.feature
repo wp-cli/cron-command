@@ -252,8 +252,9 @@ Feature: Manage WP Cron events
       Success: Scheduled event with hook 'wp_cli_test_event_lock'
       """
 
-    # Simulate an in-progress cron run by setting the doing_cron transient to now.
-    When I run `wp eval 'set_transient( "doing_cron", sprintf( "%.22F", microtime( true ) ) );'`
+    # Simulate an in-progress WP-CLI cron run by setting the doing_cron transient
+    # with the 'wpcli_' prefix that WP-CLI uses.
+    When I run `wp eval 'set_transient( "doing_cron", "wpcli_" . sprintf( "%.22F", microtime( true ) ) );'`
 
     And I try `wp cron event run --due-now`
     Then STDERR should contain:
