@@ -562,7 +562,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::error( 'Please use either --due-now or --all.' );
 		}
 
-		$events = self::get_cron_events();
+		$events = self::get_cron_events( $due_now );
 
 		if ( is_wp_error( $events ) ) {
 			return $events;
