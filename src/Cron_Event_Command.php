@@ -246,6 +246,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 	public function run( $args, $assoc_args ) {
 		$due_now = Utils\get_flag_value( $assoc_args, 'due-now' );
 
+		$doing_cron_value = null;
+
 		if ( $due_now ) {
 			$lock_timeout         = defined( 'WP_CRON_LOCK_TIMEOUT' ) ? WP_CRON_LOCK_TIMEOUT : 60;
 			$doing_cron_transient = get_transient( 'doing_cron' );
@@ -253,13 +255,14 @@ class Cron_Event_Command extends WP_CLI_Command {
 				WP_CLI::warning( 'A cron event run is already in progress; skipping.' );
 				return;
 			}
-			set_transient( 'doing_cron', sprintf( '%.22F', microtime( true ) ) );
+			$doing_cron_value = sprintf( '%.22F', microtime( true ) );
+			set_transient( 'doing_cron', $doing_cron_value, $lock_timeout );
 		}
 
 		$events = self::get_selected_cron_events( $args, $assoc_args );
 
 		if ( is_wp_error( $events ) ) {
-			if ( $due_now ) {
+			if ( $due_now && get_transient( 'doing_cron' ) === $doing_cron_value ) {
 				delete_transient( 'doing_cron' );
 			}
 			WP_CLI::error( $events );
@@ -278,7 +281,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			}
 		}
 
-		if ( $due_now ) {
+		if ( $due_now && get_transient( 'doing_cron' ) === $doing_cron_value ) {
 			delete_transient( 'doing_cron' );
 		}
 
