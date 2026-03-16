@@ -307,8 +307,13 @@ Feature: Manage WP-Cron events and schedules
   # executes the "wp_privacy_delete_old_export_files" event there.
   @require-wp-5.0
   Scenario: Run currently scheduled events
+    # Disable web-triggered cron so spawn_cron() cannot set doing_cron between
+    # steps - wp cron event run always defines DOING_CRON so this has no effect
+    # on the commands being tested.
+    When I run `wp config set DISABLE_WP_CRON true --raw`
+
     # WP throws a notice here for older versions of core.
-    When I try `wp cron event run --all`
+    And I try `wp cron event run --all`
     Then STDOUT should contain:
       """
       Executed the cron event 'wp_version_check'

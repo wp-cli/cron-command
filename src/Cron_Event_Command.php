@@ -226,7 +226,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * : One or more hooks to run.
 	 *
 	 * [--due-now]
-	 * : Run all hooks due right now.
+	 * : Run all hooks due right now. Respects the doing_cron transient to
+	 * prevent overlapping runs.
 	 *
 	 * [--exclude=<hooks>]
 	 * : Comma-separated list of hooks to exclude.
@@ -243,10 +244,27 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *     Success: Executed a total of 2 cron events.
 	 */
 	public function run( $args, $assoc_args ) {
+		$due_now = Utils\get_flag_value( $assoc_args, 'due-now' );
+
+		$doing_cron_value = null;
+
+		if ( $due_now ) {
+			$lock_timeout         = defined( 'WP_CRON_LOCK_TIMEOUT' ) ? WP_CRON_LOCK_TIMEOUT : 60;
+			$doing_cron_transient = get_transient( 'doing_cron' );
+			if ( is_numeric( $doing_cron_transient ) && (float) $doing_cron_transient > microtime( true ) - $lock_timeout ) {
+				WP_CLI::warning( 'A cron event run is already in progress; skipping.' );
+				return;
+			}
+			$doing_cron_value = sprintf( '%.22F', microtime( true ) );
+			set_transient( 'doing_cron', $doing_cron_value, $lock_timeout );
+		}
 
 		$events = self::get_selected_cron_events( $args, $assoc_args );
 
 		if ( is_wp_error( $events ) ) {
+			if ( $due_now && get_transient( 'doing_cron' ) === $doing_cron_value ) {
+				delete_transient( 'doing_cron' );
+			}
 			WP_CLI::error( $events );
 		}
 
@@ -261,6 +279,10 @@ class Cron_Event_Command extends WP_CLI_Command {
 			if ( ! empty( $event->args ) ) {
 				WP_CLI::debug( sprintf( 'Arguments: %s', wp_json_encode( $event->args ) ), 'cron' );
 			}
+		}
+
+		if ( $due_now && get_transient( 'doing_cron' ) === $doing_cron_value ) {
+			delete_transient( 'doing_cron' );
 		}
 
 		$message = ( 1 === $executed ) ? 'Executed a total of %d cron event.' : 'Executed a total of %d cron events.';
