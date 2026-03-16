@@ -327,7 +327,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * : Delete all hooks.
 	 *
 	 * [--match-args=<args>]
-	 * : Only delete events whose arguments match the given JSON-encoded array or scalar value. Requires exactly one hook name.
+	 * : Only delete events whose arguments match the given JSON-encoded array or scalar value. Argument types must match exactly (for example, `["123"]` vs `[123]`). Requires exactly one hook name.
 	 *
 	 * ## EXAMPLES
 	 *
@@ -336,7 +336,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *     Success: Deleted a total of 2 cron events.
 	 *
 	 *     # Delete a specific cron event by hook and arguments
-	 *     $ wp cron event delete cron_test --match-args='[123]'
+	 *     $ wp cron event delete cron_test --match-args='["123"]'
 	 *     Success: Deleted a total of 1 cron event.
 	 */
 	public function delete( $args, $assoc_args ) {
@@ -351,12 +351,22 @@ class Cron_Event_Command extends WP_CLI_Command {
 				WP_CLI::error( 'The --match-args parameter cannot be combined with --all or --due-now.' );
 			}
 
-			$decoded_args = json_decode( $match_args, true );
-			if ( null === $decoded_args && JSON_ERROR_NONE !== json_last_error() ) {
-				// Not valid JSON — treat as a single string argument wrapped in an array.
+			$trimmed_match_args = ltrim( $match_args );
+
+			// Only JSON-decode when the value clearly looks like JSON:
+			// - starts with '[' for arrays
+			// - starts with '"' for explicitly quoted strings
+			if ( '' !== $trimmed_match_args && ( '[' === $trimmed_match_args[0] || '"' === $trimmed_match_args[0] ) ) {
+				$decoded_args = json_decode( $match_args, true );
+				if ( null === $decoded_args && JSON_ERROR_NONE !== json_last_error() ) {
+					// Not valid JSON — treat as a single string argument wrapped in an array.
+					$decoded_args = array( $match_args );
+				} elseif ( ! is_array( $decoded_args ) ) {
+					$decoded_args = array( $decoded_args );
+				}
+			} else {
+				// Treat non-JSON-looking values as a single string argument.
 				$decoded_args = array( $match_args );
-			} elseif ( ! is_array( $decoded_args ) ) {
-				$decoded_args = array( $decoded_args );
 			}
 		}
 
