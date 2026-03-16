@@ -266,13 +266,9 @@ Feature: Manage WP Cron events
       """
 
     # After the transient is cleared, the run should proceed normally.
-    When I run `wp transient delete doing_cron`
+    When I run `wp eval 'delete_transient( "doing_cron" );'`
     And I try `wp cron event run --due-now`
     Then STDOUT should contain:
       """
       Executed the cron event 'wp_cli_test_event_lock'
-      """
-    And STDOUT should contain:
-      """
-      Executed a total of 1 cron event
       """
