@@ -248,27 +248,19 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		if ( $due_now ) {
 			$lock_timeout         = defined( 'WP_CRON_LOCK_TIMEOUT' ) ? WP_CRON_LOCK_TIMEOUT : 60;
-			$doing_cron_transient = get_transient( 'doing_cron' );
-			// Only treat the lock as belonging to another WP-CLI run when WP-CLI
-			// itself set it (value starts with 'wpcli_'). WordPress's spawn_cron()
-			// always stores a plain numeric microtime string, so we must not block
-			// ourselves on a transient that was set by spawn_cron during bootstrap.
-			if (
-				is_string( $doing_cron_transient ) &&
-				0 === strncmp( $doing_cron_transient, 'wpcli_', 6 ) &&
-				(float) substr( $doing_cron_transient, 6 ) > microtime( true ) - $lock_timeout
-			) {
+			$doing_cron_transient = get_transient( 'wp_cli_doing_cron' );
+			if ( is_numeric( $doing_cron_transient ) && (float) $doing_cron_transient > microtime( true ) - $lock_timeout ) {
 				WP_CLI::warning( 'A cron event run is already in progress; skipping.' );
 				return;
 			}
-			set_transient( 'doing_cron', 'wpcli_' . sprintf( '%.22F', microtime( true ) ) );
+			set_transient( 'wp_cli_doing_cron', sprintf( '%.22F', microtime( true ) ) );
 		}
 
 		$events = self::get_selected_cron_events( $args, $assoc_args );
 
 		if ( is_wp_error( $events ) ) {
 			if ( $due_now ) {
-				delete_transient( 'doing_cron' );
+				delete_transient( 'wp_cli_doing_cron' );
 			}
 			WP_CLI::error( $events );
 		}
@@ -287,7 +279,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		}
 
 		if ( $due_now ) {
-			delete_transient( 'doing_cron' );
+			delete_transient( 'wp_cli_doing_cron' );
 		}
 
 		$message = ( 1 === $executed ) ? 'Executed a total of %d cron event.' : 'Executed a total of %d cron events.';
