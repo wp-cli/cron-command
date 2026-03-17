@@ -313,6 +313,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 		$event_count = 0;
 		if ( is_array( $crons ) ) {
 			foreach ( $crons as $cron ) {
+				if ( ! is_array( $cron ) ) {
+					continue;
+				}
 				if ( isset( $cron[ $hook ] ) ) {
 					$event_count += count( $cron[ $hook ] );
 				}
