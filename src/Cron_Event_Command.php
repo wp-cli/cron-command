@@ -610,6 +610,10 @@ class Cron_Event_Command extends WP_CLI_Command {
 			);
 		}
 
+		if ( ! is_array( $crons ) ) {
+			return [];
+		}
+
 		foreach ( $crons as $time => $hooks ) {
 
 			// Incorrectly registered cron events can produce a string key.
