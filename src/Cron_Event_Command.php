@@ -235,6 +235,9 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * [--all]
 	 * : Run all hooks.
 	 *
+	 * [--network]
+	 * : Run hooks across all sites in a multisite installation.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Run all cron events due right now
@@ -242,14 +245,88 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *     Executed the cron event 'cron_test_1' in 0.01s.
 	 *     Executed the cron event 'cron_test_2' in 0.006s.
 	 *     Success: Executed a total of 2 cron events.
+	 *
+	 *     # Run all cron events due right now across all sites in a multisite
+	 *     $ wp cron event run --due-now --network
+	 *     Executed the cron event 'cron_test_1' in 0.01s.
+	 *     Executed the cron event 'cron_test_2' in 0.006s.
+	 *     Success: Executed a total of 2 cron events across 3 sites.
 	 */
 	public function run( $args, $assoc_args ) {
 		$due_now = Utils\get_flag_value( $assoc_args, 'due-now' );
 
+		$network              = Utils\get_flag_value( $assoc_args, 'network' );
+				$lock_timeout = defined( 'WP_CRON_LOCK_TIMEOUT' ) ? WP_CRON_LOCK_TIMEOUT : 60;
+
+		if ( $network ) {
+			if ( ! is_multisite() ) {
+				WP_CLI::error( 'This is not a multisite installation.' );
+			}
+
+			$sites = get_sites(
+				array(
+					'fields' => 'ids',
+					'number' => 0,
+				)
+			);
+
+			if ( empty( $sites ) ) {
+				WP_CLI::error( 'No sites found in the network.' );
+			}
+
+			// Remove network flag before passing to get_selected_cron_events.
+			$network_assoc_args = $assoc_args;
+			unset( $network_assoc_args['network'] );
+
+			$total_executed = 0;
+			$site_count     = count( $sites );
+
+			foreach ( $sites as $site_id ) {
+				switch_to_blog( $site_id );
+
+				$doing_cron_value = null;
+
+				if ( $due_now ) {
+					$doing_cron_transient = get_transient( 'doing_cron' );
+					if ( is_numeric( $doing_cron_transient ) && (float) $doing_cron_transient > microtime( true ) - $lock_timeout ) {
+						WP_CLI::warning( 'A cron event run is already in progress; skipping.' );
+						return;
+					}
+					$doing_cron_value = sprintf( '%.22F', microtime( true ) );
+					set_transient( 'doing_cron', $doing_cron_value, $lock_timeout );
+				}
+
+				$events = self::get_selected_cron_events( $args, $network_assoc_args );
+
+				if ( ! is_wp_error( $events ) ) {
+					$total_executed += self::run_events( $events );
+					if ( $due_now && get_transient( 'doing_cron' ) === $doing_cron_value ) {
+						delete_transient( 'doing_cron' );
+					}
+				} else {
+					if ( $due_now && get_transient( 'doing_cron' ) === $doing_cron_value ) {
+						delete_transient( 'doing_cron' );
+					}
+					WP_CLI::debug( sprintf( 'No events found for site %d: %s', $site_id, $events->get_error_message() ), 'cron' );
+				}
+
+				restore_current_blog();
+			}
+
+			$message = sprintf(
+				'Executed a total of %d %s across %d %s.',
+				$total_executed,
+				Utils\pluralize( 'cron event', $total_executed ),
+				$site_count,
+				Utils\pluralize( 'site', $site_count )
+			);
+			WP_CLI::success( $message );
+			return;
+		}
+
 		$doing_cron_value = null;
 
 		if ( $due_now ) {
-			$lock_timeout         = defined( 'WP_CRON_LOCK_TIMEOUT' ) ? WP_CRON_LOCK_TIMEOUT : 60;
 			$doing_cron_transient = get_transient( 'doing_cron' );
 			if ( is_numeric( $doing_cron_transient ) && (float) $doing_cron_transient > microtime( true ) - $lock_timeout ) {
 				WP_CLI::warning( 'A cron event run is already in progress; skipping.' );
@@ -268,18 +345,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::error( $events );
 		}
 
-		$executed = 0;
-		foreach ( $events as $event ) {
-			WP_CLI::debug( sprintf( "Beginning execution of cron event '%s'.", $event->hook ), 'cron' );
-			$start  = microtime( true );
-			$result = self::run_event( $event );
-			$total  = round( microtime( true ) - $start, 3 );
-			++$executed;
-			WP_CLI::log( sprintf( "Executed the cron event '%s' in %ss.", $event->hook, $total ) );
-			if ( ! empty( $event->args ) ) {
-				WP_CLI::debug( sprintf( 'Arguments: %s', wp_json_encode( $event->args ) ), 'cron' );
-			}
-		}
+		$executed = self::run_events( $events );
 
 		if ( $due_now && get_transient( 'doing_cron' ) === $doing_cron_value ) {
 			delete_transient( 'doing_cron' );
@@ -438,6 +504,30 @@ class Cron_Event_Command extends WP_CLI_Command {
 	}
 
 	/**
+	 * Runs multiple cron events and logs their execution.
+	 *
+	 * @param array $events Array of event objects to run.
+	 * @return int The number of events executed.
+	 */
+	private static function run_events( array $events ) {
+		$executed = 0;
+
+		foreach ( $events as $event ) {
+			WP_CLI::debug( sprintf( "Beginning execution of cron event '%s'.", $event->hook ), 'cron' );
+			$start = microtime( true );
+			self::run_event( $event );
+			$total = round( microtime( true ) - $start, 3 );
+			++$executed;
+			WP_CLI::log( sprintf( "Executed the cron event '%s' in %ss.", $event->hook, $total ) );
+			if ( ! empty( $event->args ) ) {
+				WP_CLI::debug( sprintf( 'Arguments: %s', wp_json_encode( $event->args ) ), 'cron' );
+			}
+		}
+
+		return $executed;
+	}
+
+	/**
 	 * Executes an event immediately.
 	 *
 	 * @param stdClass $event The event
@@ -518,6 +608,10 @@ class Cron_Event_Command extends WP_CLI_Command {
 				'no_events',
 				'You currently have no scheduled cron events.'
 			);
+		}
+
+		if ( ! is_array( $crons ) ) {
+			return [];
 		}
 
 		foreach ( $crons as $time => $hooks ) {
