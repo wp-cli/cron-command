@@ -2,7 +2,7 @@ Feature: Manage WP-Cron events and schedules
 
   Background:
     Given a WP install
-    And I run `wp config set DISABLE_WP_CRON false --raw --type=constant --anchor="if ( ! defined( 'DISABLE_WP_CRON' ) )"`
+    And I run `wp config set DISABLE_WP_CRON false --raw --type=constant --anchor="/* Add any custom values between this line and the \"stop editing\" line. */" --placement=after`
 
   Scenario: Scheduling and then deleting an event
     When I run `wp cron event schedule wp_cli_test_event_1 '+1 hour 5 minutes' --0=banana`
