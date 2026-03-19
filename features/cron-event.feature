@@ -198,6 +198,77 @@ Feature: Manage WP Cron events
       Success: Executed a total of 2 cron events across 3 sites.
       """
 
+  Scenario: List cron events with actions field
+    Given a wp-content/mu-plugins/test-cron-actions.php file:
+      """
+      <?php
+      add_action( 'wp_cli_test_hook', 'wp_cli_test_function' );
+      add_action( 'wp_cli_test_hook', array( 'MyTestClass', 'my_method' ) );
+      add_action( 'wp_cli_test_hook_closure', function() {
+        // Test closure
+      } );
+
+      function wp_cli_test_function() {
+        // Test function
+      }
+
+      class MyTestClass {
+        public static function my_method() {
+          // Test method
+        }
+      }
+      """
+
+    When I run `wp cron event schedule wp_cli_test_hook now`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_test_hook'
+      """
+
+    When I run `wp cron event list --fields=hook,actions --format=csv`
+    Then STDOUT should contain:
+      """
+      wp_cli_test_function
+      """
+    And STDOUT should contain:
+      """
+      MyTestClass::my_method
+      """
+
+    When I run `wp cron event list --hook=wp_cli_test_hook --fields=hook,actions --format=json`
+    Then STDOUT should be JSON containing:
+      """
+      [{"hook":"wp_cli_test_hook"}]
+      """
+    And STDOUT should contain:
+      """
+      wp_cli_test_function
+      """
+
+    When I run `wp cron event schedule wp_cli_test_hook_closure now`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_test_hook_closure'
+      """
+
+    When I run `wp cron event list --hook=wp_cli_test_hook_closure --fields=hook,actions --format=csv`
+    Then STDOUT should contain:
+      """
+      Closure
+      """
+
+    When I run `wp cron event schedule wp_cli_test_hook_no_actions now`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_test_hook_no_actions'
+      """
+
+    When I run `wp cron event list --hook=wp_cli_test_hook_no_actions --fields=hook,actions --format=csv`
+    Then STDOUT should contain:
+      """
+      None
+      """
+
   Scenario: Confirm that cron event run in debug mode shows the start of events
     When I try `wp cron event run wp_version_check --debug=cron`
     Then STDOUT should contain:
@@ -211,4 +282,32 @@ Feature: Manage WP Cron events
     And STDERR should contain:
       """
       Debug: Beginning execution of cron event 'wp_version_check'
+      """
+
+  Scenario: --due-now respects the doing_cron transient and skips when another run is in progress
+    When I run `wp cron event schedule wp_cli_test_event_lock now hourly`
+    Then STDOUT should contain:
+      """
+      Success: Scheduled event with hook 'wp_cli_test_event_lock'
+      """
+
+    # Simulate an in-progress cron run by setting the doing_cron transient.
+    When I run `wp eval 'set_transient( "doing_cron", sprintf( "%.22F", microtime( true ) ) );'`
+
+    And I try `wp cron event run --due-now`
+    Then STDERR should contain:
+      """
+      Warning: A cron event run is already in progress; skipping.
+      """
+    And STDOUT should not contain:
+      """
+      wp_cli_test_event_lock
+      """
+
+    # After the transient is cleared, the run should proceed normally.
+    When I run `wp eval 'delete_transient( "doing_cron" );'`
+    And I try `wp cron event run --due-now`
+    Then STDOUT should contain:
+      """
+      Executed the cron event 'wp_cli_test_event_lock'
       """

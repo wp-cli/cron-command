@@ -85,6 +85,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * * schedule
 	 * * interval
 	 * * next_run
+	 * * actions
 	 *
 	 * ## EXAMPLES
 	 *
@@ -111,6 +112,14 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		if ( is_wp_error( $events ) ) {
 			$events = array();
+		}
+
+		// Populate actions field only if requested
+		$requested_fields = $formatter->fields;
+		if ( ! empty( $requested_fields ) && in_array( 'actions', $requested_fields, true ) ) {
+			foreach ( $events as $event ) {
+				$event->actions = self::get_hook_actions( $event->hook );
+			}
 		}
 
 		foreach ( $events as $key => $event ) {
@@ -217,7 +226,8 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * : One or more hooks to run.
 	 *
 	 * [--due-now]
-	 * : Run all hooks due right now.
+	 * : Run all hooks due right now. Respects the doing_cron transient to
+	 * prevent overlapping runs.
 	 *
 	 * [--exclude=<hooks>]
 	 * : Comma-separated list of hooks to exclude.
@@ -243,8 +253,10 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 *     Success: Executed a total of 2 cron events across 3 sites.
 	 */
 	public function run( $args, $assoc_args ) {
+		$due_now = Utils\get_flag_value( $assoc_args, 'due-now' );
 
-		$network = Utils\get_flag_value( $assoc_args, 'network' );
+		$network              = Utils\get_flag_value( $assoc_args, 'network' );
+				$lock_timeout = defined( 'WP_CRON_LOCK_TIMEOUT' ) ? WP_CRON_LOCK_TIMEOUT : 60;
 
 		if ( $network ) {
 			if ( ! is_multisite() ) {
@@ -272,11 +284,29 @@ class Cron_Event_Command extends WP_CLI_Command {
 			foreach ( $sites as $site_id ) {
 				switch_to_blog( $site_id );
 
+				$doing_cron_value = null;
+
+				if ( $due_now ) {
+					$doing_cron_transient = get_transient( 'doing_cron' );
+					if ( is_numeric( $doing_cron_transient ) && (float) $doing_cron_transient > microtime( true ) - $lock_timeout ) {
+						WP_CLI::warning( 'A cron event run is already in progress; skipping.' );
+						return;
+					}
+					$doing_cron_value = sprintf( '%.22F', microtime( true ) );
+					set_transient( 'doing_cron', $doing_cron_value, $lock_timeout );
+				}
+
 				$events = self::get_selected_cron_events( $args, $network_assoc_args );
 
 				if ( ! is_wp_error( $events ) ) {
 					$total_executed += self::run_events( $events );
+					if ( $due_now && get_transient( 'doing_cron' ) === $doing_cron_value ) {
+						delete_transient( 'doing_cron' );
+					}
 				} else {
+					if ( $due_now && get_transient( 'doing_cron' ) === $doing_cron_value ) {
+						delete_transient( 'doing_cron' );
+					}
 					WP_CLI::debug( sprintf( 'No events found for site %d: %s', $site_id, $events->get_error_message() ), 'cron' );
 				}
 
@@ -294,13 +324,32 @@ class Cron_Event_Command extends WP_CLI_Command {
 			return;
 		}
 
+		$doing_cron_value = null;
+
+		if ( $due_now ) {
+			$doing_cron_transient = get_transient( 'doing_cron' );
+			if ( is_numeric( $doing_cron_transient ) && (float) $doing_cron_transient > microtime( true ) - $lock_timeout ) {
+				WP_CLI::warning( 'A cron event run is already in progress; skipping.' );
+				return;
+			}
+			$doing_cron_value = sprintf( '%.22F', microtime( true ) );
+			set_transient( 'doing_cron', $doing_cron_value, $lock_timeout );
+		}
+
 		$events = self::get_selected_cron_events( $args, $assoc_args );
 
 		if ( is_wp_error( $events ) ) {
+			if ( $due_now && get_transient( 'doing_cron' ) === $doing_cron_value ) {
+				delete_transient( 'doing_cron' );
+			}
 			WP_CLI::error( $events );
 		}
 
 		$executed = self::run_events( $events );
+
+		if ( $due_now && get_transient( 'doing_cron' ) === $doing_cron_value ) {
+			delete_transient( 'doing_cron' );
+		}
 
 		$message = ( 1 === $executed ) ? 'Executed a total of %d cron event.' : 'Executed a total of %d cron events.';
 		WP_CLI::success( sprintf( $message, $executed ) );
@@ -324,28 +373,44 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 		list( $hook ) = $args;
 
+		// Count events before unscheduling for WP < 5.1 compatibility where
+		// wp_unschedule_hook() returns null instead of the event count.
+		$crons       = _get_cron_array();
+		$event_count = 0;
+		if ( is_array( $crons ) ) {
+			foreach ( $crons as $cron ) {
+				if ( ! is_array( $cron ) ) {
+					continue;
+				}
+				/**
+				 * @var array<string, array<mixed>> $cron
+				 */
+				if ( isset( $cron[ $hook ] ) ) {
+					$event_count += count( $cron[ $hook ] );
+				}
+			}
+		}
+
+		if ( 0 === $event_count ) {
+			WP_CLI::error( sprintf( "No events found for hook '%s'.", $hook ) );
+		}
+
 		$unscheduled = wp_unschedule_hook( $hook );
 
-		if ( empty( $unscheduled ) ) {
-			$message = 'Failed to unschedule events for hook \'%1\$s.';
-
-			// If 0 event found on hook.
-			if ( 0 === $unscheduled ) {
-				$message = "No events found for hook '%1\$s'.";
-			}
-
-			WP_CLI::error( sprintf( $message, $hook ) );
-
-		} else {
-			WP_CLI::success(
-				sprintf(
-					'Unscheduled %1$d %2$s for hook \'%3$s\'.',
-					$unscheduled,
-					Utils\pluralize( 'event', $unscheduled ),
-					$hook
-				)
-			);
+		if ( false === $unscheduled ) {
+			WP_CLI::error( sprintf( "Failed to unschedule events for hook '%s'.", $hook ) );
 		}
+
+		$count = ( is_int( $unscheduled ) && $unscheduled > 0 ) ? $unscheduled : $event_count;
+
+		WP_CLI::success(
+			sprintf(
+				'Unscheduled %1$d %2$s for hook \'%3$s\'.',
+				$count,
+				Utils\pluralize( 'event', $count ),
+				$hook
+			)
+		);
 	}
 
 	/**
@@ -365,17 +430,63 @@ class Cron_Event_Command extends WP_CLI_Command {
 	 * [--all]
 	 * : Delete all hooks.
 	 *
+	 * [--match-args=<args>]
+	 * : Only delete events whose arguments match the given JSON-encoded array or scalar value. Argument types must match exactly (for example, `["123"]` vs `[123]`). Requires exactly one hook name.
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Delete all scheduled cron events for the given hook
 	 *     $ wp cron event delete cron_test
 	 *     Success: Deleted a total of 2 cron events.
+	 *
+	 *     # Delete a specific cron event by hook and arguments
+	 *     $ wp cron event delete cron_test --match-args='["123"]'
+	 *     Success: Deleted a total of 1 cron event.
 	 */
 	public function delete( $args, $assoc_args ) {
+		$match_args = Utils\get_flag_value( $assoc_args, 'match-args' );
+
+		if ( null !== $match_args ) {
+			if ( 1 !== count( $args ) ) {
+				WP_CLI::error( 'The --match-args parameter requires exactly one hook name.' );
+			}
+
+			if ( Utils\get_flag_value( $assoc_args, 'all' ) || Utils\get_flag_value( $assoc_args, 'due-now' ) ) {
+				WP_CLI::error( 'The --match-args parameter cannot be combined with --all or --due-now.' );
+			}
+
+			$trimmed_match_args = ltrim( $match_args );
+
+			// Only JSON-decode when the value clearly looks like JSON:
+			// - starts with '[' for arrays
+			// - starts with '"' for explicitly quoted strings
+			if ( '' !== $trimmed_match_args && ( '[' === $trimmed_match_args[0] || '"' === $trimmed_match_args[0] ) ) {
+				$decoded_args = json_decode( $match_args, true );
+				if ( null === $decoded_args && JSON_ERROR_NONE !== json_last_error() ) {
+					// Not valid JSON — treat as a single string argument wrapped in an array.
+					$decoded_args = array( $match_args );
+				} elseif ( ! is_array( $decoded_args ) ) {
+					$decoded_args = array( $decoded_args );
+				}
+			} else {
+				// Treat non-JSON-looking values as a single string argument.
+				$decoded_args = array( $match_args );
+			}
+		}
+
 		$events = self::get_selected_cron_events( $args, $assoc_args );
 
 		if ( is_wp_error( $events ) ) {
 			WP_CLI::error( $events );
+		}
+
+		if ( null !== $match_args ) {
+			$events = array_filter(
+				$events,
+				function ( $event ) use ( $decoded_args ) {
+					return $event->args === $decoded_args;
+				}
+			);
 		}
 
 		$deleted = 0;
@@ -471,6 +582,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 		$event->next_run          = get_date_from_gmt( date( 'Y-m-d H:i:s', $event->time ), self::$time_format ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 		$event->next_run_gmt      = date( self::$time_format, $event->time ); //phpcs:ignore WordPress.DateTime.RestrictedFunctions.date_date
 		$event->next_run_relative = self::interval( $event->time - time() );
+		$event->actions           = '';
 
 		return $event;
 	}
@@ -556,7 +668,7 @@ class Cron_Event_Command extends WP_CLI_Command {
 			WP_CLI::error( 'Please use either --due-now or --all.' );
 		}
 
-		$events = self::get_cron_events();
+		$events = self::get_cron_events( $due_now );
 
 		if ( is_wp_error( $events ) ) {
 			return $events;
@@ -678,5 +790,93 @@ class Cron_Event_Command extends WP_CLI_Command {
 
 	private function get_formatter( &$assoc_args ) {
 		return new \WP_CLI\Formatter( $assoc_args, $this->fields, 'event' );
+	}
+
+	/**
+	 * Gets the actions (callbacks) registered for a specific hook.
+	 *
+	 * @param string $hook_name The name of the hook.
+	 * @return string A comma-separated list of action callbacks, or 'None' if no actions are registered.
+	 */
+	protected static function get_hook_actions( $hook_name ) {
+		static $cache = array();
+
+		if ( isset( $cache[ $hook_name ] ) ) {
+			return $cache[ $hook_name ];
+		}
+
+		global $wp_filter;
+
+		if ( ! isset( $wp_filter[ $hook_name ] ) ) {
+			$cache[ $hook_name ] = 'None';
+			return $cache[ $hook_name ];
+		}
+
+		$hook = $wp_filter[ $hook_name ];
+
+		// Get callbacks from the WP_Hook object (WordPress 4.7+)
+		if ( $hook instanceof \WP_Hook ) {
+			$callbacks = $hook->callbacks;
+		} else {
+			// Fallback for older WordPress versions
+			$callbacks = $hook;
+		}
+
+		if ( empty( $callbacks ) ) {
+			$cache[ $hook_name ] = 'None';
+			return $cache[ $hook_name ];
+		}
+
+		ksort( $callbacks );
+
+		$actions = array();
+
+		// Iterate through all priorities
+		foreach ( $callbacks as $priority => $priority_callbacks ) {
+			foreach ( $priority_callbacks as $callback_info ) {
+				if ( ! isset( $callback_info['function'] ) ) {
+					continue;
+				}
+				$callback  = $callback_info['function'];
+				$actions[] = self::format_callback( $callback );
+			}
+		}
+
+		$result              = empty( $actions ) ? 'None' : implode( ', ', $actions );
+		$cache[ $hook_name ] = $result;
+		return $cache[ $hook_name ];
+	}
+
+	/**
+	 * Formats a callback into a readable string.
+	 *
+	 * @param callable $callback The callback to format.
+	 * @return string A formatted string representing the callback.
+	 */
+	protected static function format_callback( $callback ) {
+		if ( is_string( $callback ) ) {
+			return $callback;
+		} elseif ( is_array( $callback ) && count( $callback ) === 2 ) {
+			/**
+			 * @var array{0: string, 1: string} $callback
+			 */
+			$class  = $callback[0];
+			$method = $callback[1];
+
+			if ( is_object( $class ) ) {
+				$class_name = get_class( $class );
+			} else {
+				$class_name = $class;
+			}
+
+			return $class_name . '::' . $method;
+		} elseif ( $callback instanceof \Closure ) {
+			return 'Closure';
+		} elseif ( is_object( $callback ) ) {
+			return get_class( $callback ) . '::__invoke';
+		}
+
+		// Fallback for unknown callback types
+		return 'Unknown';
 	}
 }

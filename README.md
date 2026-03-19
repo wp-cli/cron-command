@@ -88,7 +88,7 @@ wp cron event
 Deletes all scheduled cron events for the given hook.
 
 ~~~
-wp cron event delete [<hook>...] [--due-now] [--exclude=<hooks>] [--all]
+wp cron event delete [<hook>...] [--due-now] [--exclude=<hooks>] [--all] [--match-args=<args>]
 ~~~
 
 **OPTIONS**
@@ -105,11 +105,18 @@ wp cron event delete [<hook>...] [--due-now] [--exclude=<hooks>] [--all]
 	[--all]
 		Delete all hooks.
 
+	[--match-args=<args>]
+		Only delete events whose arguments match the given JSON-encoded array or scalar value. Argument types must match exactly (for example, `["123"]` vs `[123]`). Requires exactly one hook name.
+
 **EXAMPLES**
 
     # Delete all scheduled cron events for the given hook
     $ wp cron event delete cron_test
     Success: Deleted a total of 2 cron events.
+
+    # Delete a specific cron event by hook and arguments
+    $ wp cron event delete cron_test --match-args='["123"]'
+    Success: Deleted a total of 1 cron event.
 
 
 
@@ -160,6 +167,7 @@ These fields are optionally available:
 * schedule
 * interval
 * next_run
+* actions
 
 **EXAMPLES**
 
@@ -193,7 +201,8 @@ wp cron event run [<hook>...] [--due-now] [--exclude=<hooks>] [--all]
 		One or more hooks to run.
 
 	[--due-now]
-		Run all hooks due right now.
+		Run all hooks due right now. Respects the doing_cron transient to
+		prevent overlapping runs.
 
 	[--exclude=<hooks>]
 		Comma-separated list of hooks to exclude.
