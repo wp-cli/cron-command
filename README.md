@@ -3,7 +3,7 @@ wp-cli/cron-command
 
 Tests, runs, and deletes WP-Cron events; manages WP-Cron schedules.
 
-[![Testing](https://github.com/wp-cli/cron-command/actions/workflows/testing.yml/badge.svg)](https://github.com/wp-cli/cron-command/actions/workflows/testing.yml)
+[![Testing](https://github.com/wp-cli/cron-command/actions/workflows/testing.yml/badge.svg)](https://github.com/wp-cli/cron-command/actions/workflows/testing.yml) [![Code Coverage](https://codecov.io/gh/wp-cli/cron-command/branch/main/graph/badge.svg)](https://codecov.io/gh/wp-cli/cron-command/tree/main)
 
 Quick links: [Using](#using) | [Installing](#installing) | [Contributing](#contributing) | [Support](#support)
 
