@@ -375,12 +375,12 @@ Feature: Manage WP-Cron events and schedules
       error_log = {RUN_DIR}/server.log
       log_errors = on
       """
-    And I launch in the background `wp server --host=localhost --port=8080 --config=php.ini`
+    And I launch in the background `wp server --host=localhost --port=8081 --config=php.ini`
     And a wp-content/mu-plugins/set_cron_site_url.php file:
       """
       <?php
       add_filter( 'cron_request', static function ( $cron_request_array ) {
-        $cron_request_array['url']               = str_replace( site_url(), 'http://localhost:8080', $cron_request_array['url'] );
+        $cron_request_array['url']               = str_replace( site_url(), 'http://localhost:8081', $cron_request_array['url'] );
         $cron_request_array['args']['sslverify'] = false;
         return $cron_request_array;
       } );
