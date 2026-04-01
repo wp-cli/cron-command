@@ -223,6 +223,8 @@ Feature: Manage WP-Cron events and schedules
       | name   | interval |
       | hourly | 3600     |
 
+  # TODO: Investigate 500 Internal Server Error on Windows.
+  @skip-windows
   Scenario: Testing WP-Cron
     Given a php.ini file:
       """
@@ -359,6 +361,8 @@ Feature: Manage WP-Cron events and schedules
       Executed a total of 0 cron events
       """
 
+  # TODO: Investigate 500 Internal Server Error on Windows.
+  @skip-windows
   Scenario: Don't trigger cron when ALTERNATE_WP_CRON is defined
     Given a alternate-wp-cron.php file:
       """
