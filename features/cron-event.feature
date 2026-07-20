@@ -14,6 +14,13 @@ Feature: Manage WP Cron events
       Success: Executed a total of
       """
 
+    # Running --all in WP >= 6.3 dynamically schedules 'wp_delete_temp_updater_backups' for now.
+    When I try `wp cron event run --due-now`
+    Then STDOUT should contain:
+      """
+      Success: Executed a total of
+      """
+
     When I run `wp cron event run --due-now`
     Then STDOUT should contain:
       """
