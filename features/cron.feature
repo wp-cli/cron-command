@@ -142,14 +142,14 @@ Feature: Manage WP-Cron events and schedules
       """
       <?php
       add_filter(
-        'cron_schedules',
-        function( $schedules ) {
-          $schedules['test_schedule'] = array(
-            'interval' => 3600,
-            'display'  => __( 'Every Hour' ),
-          );
-          return $schedules;
-        }
+          'cron_schedules',
+          function ( $schedules ) {
+              $schedules['test_schedule'] = array(
+                  'interval' => 3600,
+                  'display'  => __( 'Every Hour' ),
+              );
+              return $schedules;
+          }
       );
       """
 
@@ -235,11 +235,14 @@ Feature: Manage WP-Cron events and schedules
     And a wp-content/mu-plugins/set_cron_site_url.php file:
       """
       <?php
-      add_filter( 'cron_request', static function ( $cron_request_array ) {
-        $cron_request_array['url']               = 'http://localhost:8080';
-        $cron_request_array['args']['sslverify'] = false;
-        return $cron_request_array;
-      } );
+      add_filter(
+          'cron_request',
+          static function ( $cron_request_array ) {
+              $cron_request_array['url']               = 'http://localhost:8080';
+              $cron_request_array['args']['sslverify'] = false;
+              return $cron_request_array;
+          }
+      );
       """
 
     When I run `wp cron event schedule wp_cli_test_event_1 '+1 hour 5 minutes' --0=banana`
@@ -390,11 +393,14 @@ Feature: Manage WP-Cron events and schedules
     And a wp-content/mu-plugins/set_cron_site_url.php file:
       """
       <?php
-      add_filter( 'cron_request', static function ( $cron_request_array ) {
-        $cron_request_array['url']               = str_replace( site_url(), 'http://localhost:8081', $cron_request_array['url'] );
-        $cron_request_array['args']['sslverify'] = false;
-        return $cron_request_array;
-      } );
+      add_filter(
+          'cron_request',
+          static function ( $cron_request_array ) {
+              $cron_request_array['url']               = str_replace( site_url(), 'http://localhost:8081', $cron_request_array['url'] );
+              $cron_request_array['args']['sslverify'] = false;
+              return $cron_request_array;
+          }
+      );
       """
 
     When I run `wp eval 'var_export( ALTERNATE_WP_CRON );'`
@@ -451,23 +457,23 @@ Feature: Manage WP-Cron events and schedules
       """
       <?php
       $val = array(
-        1647914509 => array(
-          'postindexer_secondpass_cron' => array(
-            '40cd750bba9870f18aada2478b24840a' => array(
-              'schedule' => '5mins',
-              'args' => array(),
-              'interval' => 100,
-            ),
+          1647914509 => array(
+              'postindexer_secondpass_cron' => array(
+                  '40cd750bba9870f18aada2478b24840a' => array(
+                      'schedule' => '5mins',
+                      'args' => array(),
+                      'interval' => 100,
+                  ),
+              ),
           ),
-        ),
-        'wp_batch_split_terms' => array(
-          1442323165 => array(
-            '40cd750bba9870f18aada2478b24840a' => array(
-              'schedule' => false,
-              'args' => array()
-            )
-          )
-        )
+          'wp_batch_split_terms' => array(
+              1442323165 => array(
+                  '40cd750bba9870f18aada2478b24840a' => array(
+                      'schedule' => false,
+                      'args' => array(),
+                  ),
+              ),
+          ),
       );
       update_option( 'cron', $val );
       """

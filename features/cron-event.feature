@@ -91,16 +91,21 @@ Feature: Manage WP Cron events
   Scenario: Run cron event with a registered shutdown function
     Given a wp-content/mu-plugins/setup_shutdown_function.php file:
       """
-      add_action('mycron', function() {
-        breakthings();
-      });
+      add_action(
+          'mycron',
+          function () {
+              breakthings();
+          }
+      );
 
-      register_shutdown_function(function() {
-        $error = error_get_last();
-        if ($error['type'] === E_ERROR) {
-          WP_CLI::line('MY SHUTDOWN FUNCTION');
-        }
-        });
+      register_shutdown_function(
+          function () {
+              $error = error_get_last();
+              if ( $error['type'] === E_ERROR ) {
+                  WP_CLI::line( 'MY SHUTDOWN FUNCTION' );
+              }
+          }
+      );
       """
 
     When I run `wp cron event schedule mycron now`
@@ -114,13 +119,18 @@ Feature: Manage WP Cron events
     Given a wp-content/mu-plugins/setup_shutdown_function_log.php file:
       """
       <?php
-      add_action('mycronlog', function() {
-        breakthings();
-      });
+      add_action(
+          'mycronlog',
+          function () {
+              breakthings();
+          }
+      );
 
-      register_shutdown_function(function() {
-        error_log('LOG A SHUTDOWN FROM ERROR');
-      });
+      register_shutdown_function(
+          function () {
+              error_log( 'LOG A SHUTDOWN FROM ERROR' );
+          }
+      );
       """
 
     And I run `wp config set WP_DEBUG true --raw`
@@ -211,18 +221,21 @@ Feature: Manage WP Cron events
       <?php
       add_action( 'wp_cli_test_hook', 'wp_cli_test_function' );
       add_action( 'wp_cli_test_hook', array( 'MyTestClass', 'my_method' ) );
-      add_action( 'wp_cli_test_hook_closure', function() {
-        // Test closure
-      } );
+      add_action(
+          'wp_cli_test_hook_closure',
+          function () {
+              // Test closure
+          }
+      );
 
       function wp_cli_test_function() {
-        // Test function
+          // Test function
       }
 
       class MyTestClass {
-        public static function my_method() {
-          // Test method
-        }
+          public static function my_method() {
+              // Test method
+          }
       }
       """
 
