@@ -186,8 +186,10 @@ Feature: Manage WP Cron events
 
   Scenario: Run cron events with --network flag on multisite
     Given a WP multisite subdirectory install
-    And I run `wp site create --slug=site2`
-    And I run `wp site create --slug=site3`
+    And these sites:
+      | slug  |
+      | site2 |
+      | site3 |
 
     When I run `wp cron event schedule wp_cli_network_test now`
     Then STDOUT should contain:
